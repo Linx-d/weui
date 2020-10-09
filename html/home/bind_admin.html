@@ -1,0 +1,885 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>绑定用户</title>
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="black" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="email=no" name="format-detection">
+    <link href="../../css/layout.min.css" rel="stylesheet" />
+    <link href="../../css/scs.min.css" rel="stylesheet" />
+    <!-- 头像截取 -->
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="../../css/intial.css" />
+
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+    <script src="https://libs.baidu.com/jquery/1.10.2/jquery.min.js"></script>
+    
+    
+
+    <style>
+        #myAddrs {
+            font-size: 16px;
+            border: 0;
+            color: #000;
+            display: flex;
+        }
+
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-cells__title {
+            font-size: 18px;
+            margin: 0;
+            background: #f2f3f5;
+            padding: .1em 15px;
+        }
+
+        /*---------------------areaSlect login------------------------*/
+
+        /*---------------------areaSlect end------------------------*/
+
+        /*------------------------------上传照片样式---------------------------------*/
+        .file {
+            position: relative;
+            display: inline-block;
+            background: #D0EEFF;
+            border: 1px solid #99D3F5;
+            border-radius: 4px;
+            padding: 4px 12px;
+            overflow: hidden;
+            color: #1E88C7;
+            text-decoration: none;
+            text-indent: 0;
+            line-height: 20px;
+        }
+        .file input {
+            position: absolute;
+            font-size: 20px;
+            right: 0;
+            top: 0;
+            opacity: 0;
+        }
+        .file:hover {
+            background: #AADFFD;
+            border-color: #78C3F3;
+            color: #004974;
+            text-decoration: none;
+        }
+        /*截图上传页面*/
+        .clipbg{
+            position: fixed;
+            background: black;
+            top: 0;
+            z-index: 999;
+            width: 100%;
+            height: 100%;
+            left: 0;
+        }
+        .loading{
+            position: absolute;
+            top: 40%;
+            width: 38%;
+            left: 31%;
+            height: 1.6rem;
+            line-height: 1.6rem;
+            z-index: 99999;
+            text-align: center;
+            color: #ffffff;
+            border-radius:0.2rem ;
+            background: #9f9f9f;
+        }
+        .clipbg #clipArea{
+            width: 100%;
+            height: 80%;
+            margin: auto;
+
+        }
+        .clipbg .footer{
+            width: 90%;
+            position: fixed;
+            left: 5%;
+            bottom: 0px;
+            text-align: center;
+        }
+        .clipbg dl{
+            background: #ffffff;
+            border-radius: 0.4rem;
+            overflow: hidden;
+            margin-bottom: 0.6rem;
+        }
+        .clipbg dd{
+            position: relative;
+            height: 2.25rem;
+            line-height: 2.25rem;
+            border-bottom:1px solid #999999 ;
+        }
+        .clipbg .back{
+            height: 2.25rem;
+            line-height:2.25rem;
+            border-radius: 0.4rem;
+            margin-bottom: 0.4rem;
+            background: #ffffff;
+        }
+        .clipbg dd input{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 11;
+            filter:alpha(opacity=0);  
+            -moz-opacity:0;  
+            -khtml-opacity: 0;  
+            opacity: 0; 
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 头像截取 -->
+    <div class="clipbg displaynone">
+        <div id="clipArea"></div>
+        <div class="loading displaynone">正在载入图片...</div>
+        <div class="footer">
+        <dl>
+            <dd style="background: #fe1041; color: #ffffff;border: none;">打开相册<input type="file" id="photo" name="photo" accept="image/*" ></dd>
+      <dd id="clipBtn">完成裁剪</dd>
+        </dl>
+        <div class="back">取消</div>
+        </div>
+    </div>
+
+
+    <!--<div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>-->
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="page__hd" style="padding: 20px;">
+                        <img id="photo_show" src="images/bind.png" style="width: 100px;height: 100px; vertical-align: middle;">
+                        <span style="font-size: 20px;">绑定用户</span>
+                    </div>
+                    <div class="page__bd">
+                        <!--map content-->
+                        <div id="bindMap" style="width: 100%; height: 0;"></div>
+                        <!-- form 表单-->
+                        <form enctype="multipart/form-data" id="uploadForm">
+                            <div class="weui-cells__title">基本信息</div>
+                            <div class="weui-cells weui-cells_form">
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">头像<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd file">
+                                        <input  type="text" accept="image/*" id="shanchuan" onfocus="this.blur();" style="opacity:0" >上传图片
+                                    </div>
+                                    <div class="weui-cell__ft" id="captPhoto">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                                <!-- name -->
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">姓名<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="name" id="userName" placeholder="请输入姓名" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captName">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active weui-cell_select weui-cell_select-after">
+                                    <div class="weui-cell__hd">
+                                        <label for="" class="weui-label">性别<img src="../../images/xing.png" alt=""
+                                                style="width: 20px;"></label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="sex" id="sex_choose">
+                                            <option value="男">男</option>
+                                            <option value="女">女</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">出生日期<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="age" type="date" id="age" placeholder="请输入年龄" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captAge">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label">手机<img src="../../images/xing.png" alt=""
+                                                style="width: 20px;"></label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="tel" id="tel" name="tel" placeholder="请输入手机号" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captTel">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                    <div class="weui-cell__ft" style="display: none;">
+                                        <input class="weui-vcode-btn" type="button" value="获取验证码"
+                                            style="background-color: #FFF; border-top: 0; border-right: 0; border-bottom: 0; outline: none;">
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active" style="display: none;">
+                                    <div class="weui-cell__hd"><label class="weui-label">验证码</label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="captcha" id="captcha" placeholder="请输入4位验证码" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captCode">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="weui-cells__title">地址</div>
+                            <div class="weui-cells weui-cells_form">
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">地址<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd">
+                                        <input type="text" class="weui-input" name="address" readonly
+                                            placeholder="点击设置地址" id="myAddrs" data-key="4-84-1298"
+                                            style="border-radius: 0;" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captAddress">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">详细地址<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="fullAddress" id="fullAddress"
+                                            placeholder="请输入详细地址" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captFulladdress">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--乘坐交通-->
+                            <div class="weui-cells__title">乘坐交通</div>
+                            <div class="weui-cells weui-cells_radio" style="height: 100%;" id="traffic">
+                                <label class="weui-cell weui-cell_active weui-check__label" for="x11">
+                                    <div class="weui-cell__bd">
+                                        <p>公交</p>
+                                    </div>
+                                    <div class="weui-cell__ft">
+                                        <input type="radio" class="weui-check" name="radio1" id="x11"
+                                            checked="checked" />
+                                        <span class="weui-icon-checked"></span>
+                                    </div>
+                                </label>
+                                <label class="weui-cell weui-cell_active weui-check__label" for="x12">
+                                    <div class="weui-cell__bd">
+                                        <p>地铁</p>
+                                    </div>
+                                    <div class="weui-cell__ft">
+                                        <input type="radio" name="radio1" class="weui-check" id="x12" />
+                                        <span class="weui-icon-checked"></span>
+                                    </div>
+                                </label>
+                                <label class="weui-cell weui-cell_active weui-check__label" for="x13">
+
+                                    <div class="weui-cell__bd">
+                                        <p>飞机</p>
+                                    </div>
+                                    <div class="weui-cell__ft">
+                                        <input type="radio" name="radio1" class="weui-check" id="x13" />
+                                        <span class="weui-icon-checked"></span>
+                                    </div>
+                                </label>
+                                <label class="weui-cell weui-cell_active weui-check__label" for="x14">
+                                    <div class="weui-cell__bd">
+                                        <p>私家车</p>
+                                    </div>
+                                    <div class="weui-cell__ft">
+                                        <input type="radio" name="radio1" class="weui-check" id="x14" />
+                                        <span class="weui-icon-checked"></span>
+                                    </div>
+                                </label>
+                                <label class="weui-cell weui-cell_active weui-check__label" for="x15">
+                                    <div class="weui-cell__bd">
+                                        <p>其他</p>
+                                    </div>
+                                    <div class="weui-cell__ft">
+                                        <input type="radio" name="radio1" class="weui-check" id="x15" />
+                                        <span class="weui-icon-checked"></span>
+                                    </div>
+                                </label>
+                                <div class="weui-cells weui-cells_form" style="margin-top: 0; margin-bottom: 5px;">
+                                    <div class="weui-cell weui-cell_active">
+                                        <div class="weui-cell__hd"><label class="weui-label">详细<img
+                                                    src="../../images/xing.png" alt="" style="width: 20px;"></label>
+                                        </div>
+                                        <div class="weui-cell__bd">
+                                            <input class="weui-input" name="shift" id="numberShift"
+                                                placeholder="详细出行方式或者班次" />
+                                        </div>
+                                        <div class="weui-cell__ft" id="captNumberShift">
+                                            <i class="weui-icon-warn"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--添加更多
+                <a href="javascript:" class="weui-cell weui-cell_active weui-cell_link">
+                    <div class="weui-cell__bd">添加更多</div>
+                </a>
+                -->
+                                <label for="weuiAgree" class="weui-agree">
+                                    <input id="weuiAgree" type="checkbox" class="weui-agree__checkbox" />
+                                    <span class="weui-agree__text">
+                                        阅读并同意<a href="javascript:" id="clause">《相关条款》</a>
+                                    </span>
+                                </label>
+                                <a href="javascript:" class="weui-btn weui-btn_primary" id="bind_user"
+                                    style="display: block; margin-top: 10px; width: 90%;">确定</a>
+                                <a href="javascript:" class="weui-btn weui-btn_primary" id="bind_back"
+                                    style="display: block; margin-top: 10px; width: 90%;">返回</a>
+                            </div>
+                        </form>
+                    </div>
+                    <!--BEGIN dialog2-->
+                    <div class="js_dialog" id="Dialog_no" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__bd" id="toastMsg"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                    id="close_no">知道了</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="js_dialog" id="Dialog_yes" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__bd">提交成功</div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                    id="close_yes">返回</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--设备已绑定提示框-->
+                    <div class="js_dialog" id="unitied" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__bd"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                    id="unitied_back">返回</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ---------------   相关条款弹窗  ------------- -->
+    <div class="js_dialog" id="clauseDiv" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog">
+            <div class="weui-dialog__bd" style="overflow: auto; height: 400px;">本软件尊重并保护所有使用服务用户的个人隐私权。为了给您提供更准确、更有个性化的 服务，本软件会按照本隐私权政策的规定使用和披露您的个人信息。但本软件将以高 度的勤勉、审慎义务对待这些信息。除本隐私权政策另有规定外，在未征得您事先许可的情况下 ，本软件不会将这些信息对外披露或向第三方提供。本软件会不时更新本隐私权政策 。 您在同意本软件服务使用协议之时，即视为您已经同意本隐私权政策全部内容。本隐私 权政策属于本软件服务使用协议不可分割的一部分。
+
+                1. 适用范围
+                
+                a)本软件是和硬件通过tcp及udp协议进行通信及视频传输，进行相关的网络请求服务。
+                b)在您使用本软件相关服务时，您需要允许使用相关的隐私服务，才可以更好使用本软件。
+                
+                2. 信息使用
+                
+                a) 本软件不会向任何无关第三方提供、出售、出租、分享或交易您的个人信息，除非事先 得到您的许可，或该第三方和本软件（含本软件关联公司）单独或共同为您提供服务 ，且在该服务结束后，其将被禁止访问包括其以前能够访问的所有这些资料。
+                
+                b) 本软件亦不允许任何第三方以任何手段收集、编辑、出售或者无偿传播您的个人信息。 任何本软件平台用户如从事上述活动，一经发现，本软件有权立即终止与该用户的服 务协议。
+                
+                3. 信息安全
+                
+                a) 本软件帐号均有安全保护功能，请妥善保管您的用户名及密码信息。本软件将通过对用户密码进行加密等安全措施确保您的信息不丢失，不被滥用和变造。
+                
+                隐私政策条款
+                使用本App即表示您同意此隐私政策的条款和条件。如果您不同意本政策，请不要使用该App。我们保留权利，在我们决定更改，修改，增加或删除本政策的部分，在任何时候。请定期浏览此网页查阅任何修改。如果您继续使用我们的App以后的任何更改这些条款的发布将意味着你已经接受了这些调整。
+            </div>
+            <div class="weui-dialog__ft">
+                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default" id="guan">关闭</a>
+            </div>
+        </div>
+        
+    </div>
+
+
+    
+    <script src="../../js/jquery.scs.min.js"></script>
+    <script src="../../js/CNAddrArr.min.js"></script>
+    <!-- 头像截取 -->
+	<script src="../../js/hammer.min.js"></script>
+    <script src="../../js/lrz.all.bundle.js"></script>
+    <script src="../../js/iscroll-zoom-min.js"></script>
+    <script src="../../js/PhotoClip.js"></script>
+
+    <script>
+        $(function () {
+            captLogin();
+            //bind
+            var patams = getPatams();
+            var imei = patams.imei;
+            var corpId = patams.corpId;
+            var toastMsg;//提示信息
+            var photoSource = '';//截取后的头像
+
+            function getLoc() {
+                wx.getLocation({
+                type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+                success: function (res) {
+                    var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+                    var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+                    var speed = res.speed; // 速度，以米/每秒计
+                    var accuracy = res.accuracy; // 位置精度
+                    // 地址逆解析
+                    var map = new BMap.Map("bindMap");
+                    var point = new BMap.Point(longitude, latitude);
+                    map.centerAndZoom(point, 12);
+                    var geoc = new BMap.Geocoder();
+                    geoc.getLocation(point, function (rs) {
+                        var addComp = rs.addressComponents;
+                        //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                        $('#myAddrs').attr('value', addComp.province + addComp.city + addComp.district);
+                    });
+                }
+            });}
+
+            getJSSDK(getLoc)
+
+            
+            
+            /**
+             * 通过数组id获取地址列表数组
+             *
+             * @param {Number} id
+             * @return {Array} 
+             */
+            function getAddrsArrayById(id) {
+                var results = [];
+                if (addr_arr[id] != undefined)
+                    addr_arr[id].forEach(function (subArr) {
+                        results.push({
+                            key: subArr[0],
+                            val: subArr[1]
+                        });
+                    });
+                else {
+                    return;
+                }
+                return results;
+            }
+            /**
+             * 通过开始的key获取开始时应该选中开始数组中哪个元素
+             *
+             * @param {Array} StartArr
+             * @param {Number|String} key
+             * @return {Number} 
+             */
+            function getStartIndexByKeyFromStartArr(startArr, key) {
+                var result = 0;
+                if (startArr != undefined)
+                    startArr.forEach(function (obj, index) {
+                        if (obj.key == key) {
+                            result = index;
+                            return false;
+                        }
+                    });
+                return result;
+            }
+
+            //bind the click event for 'input' element
+            $("#myAddrs").on('click', function () {
+                console.log('选择地区')
+                var PROVINCES = [],
+                    startCities = [],
+                    startDists = [];
+                //Province data，shall never change.
+                addr_arr[0].forEach(function (prov) {
+                    PROVINCES.push({
+                        key: prov[0],
+                        val: prov[1]
+                    });
+                });
+                //init other data.
+                var $input = $(this),
+                    dataKey = $input.attr("data-key"),
+                    provKey = 1, //default province 北京
+                    cityKey = 36, //default city 北京
+                    distKey = 37, //default district 北京东城区
+                    distStartIndex = 0, //default 0
+                    cityStartIndex = 0, //default 0
+                    provStartIndex = 0; //default 0
+
+                if (dataKey != "" && dataKey != undefined) {
+                    var sArr = dataKey.split("-");
+                    if (sArr.length == 3) {
+                        provKey = sArr[0];
+                        cityKey = sArr[1];
+                        distKey = sArr[2];
+
+                    } else if (sArr.length == 2) { //such as 台湾，香港 and the like.
+                        provKey = sArr[0];
+                        cityKey = sArr[1];
+                    }
+                    startCities = getAddrsArrayById(provKey);
+                    startDists = getAddrsArrayById(cityKey);
+                    provStartIndex = getStartIndexByKeyFromStartArr(PROVINCES, provKey);
+                    cityStartIndex = getStartIndexByKeyFromStartArr(startCities, cityKey);
+                    distStartIndex = getStartIndexByKeyFromStartArr(startDists, distKey);
+                }
+                var navArr = [{//3 scrollers, and the title and id will be as follows:
+                    title: "省",
+                    id: "scs_items_prov"
+                }, {
+                    title: "市",
+                    id: "scs_items_city"
+                }, {
+                    title: "区",
+                    id: "scs_items_dist"
+                }];
+                SCS.init({
+                    navArr: navArr,
+                    onOk: function (selectedKey, selectedValue) {
+                        $input.val(selectedValue).attr("data-key", selectedKey);
+                    }
+                });
+                var distScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[2].id,
+                    dataArr: startDists,
+                    startIndex: distStartIndex
+                });
+                var cityScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[1].id,
+                    dataArr: startCities,
+                    startIndex: cityStartIndex,
+                    onChange: function (selectedItem, selectedIndex) {
+                        distScroller.render(getAddrsArrayById(selectedItem.key), 0); //re-render distScroller when cityScroller change
+                    }
+                });
+                var provScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[0].id,
+                    dataArr: PROVINCES,
+                    startIndex: provStartIndex,
+                    onChange: function (selectedItem, selectedIndex) { //re-render both cityScroller and distScroller when provScroller change
+                        cityScroller.render(getAddrsArrayById(selectedItem.key), 0);
+                        distScroller.render(getAddrsArrayById(cityScroller.getSelectedItem().key), 0);
+                    }
+                });
+            });
+
+
+            $('#bind_user').on('click', function () {
+                var sex = $('#sex_choose')[0].selectedOptions[0].innerText;
+                //weuiAgree
+                var weuiAgree = $('#weuiAgree')[0].checked;
+                console.log($("input[name='address']").val())
+                if (weuiAgree) {
+                    //同意相关条款
+                    //检测是否全部输入正确 
+                    var test = photoSource === '' || $("input[name='name']").val() === '' || $("input[name='age']").val() === '' || $("input[name='address']").val() === '' || $("input[name='tel']").val() === '' || $("input[name='fullAddress']").val() === '' || $("input[name='shift']").val() === '';
+                    /*var test = $("input[name='name']").val()==='' || $("input[name='age']").val()==='' || $("input[name='address']").val()==='' || $("input[name='tel']").val()==='' || $("input[name='captcha']").val()==='' ;*/
+                    if ($('.weui-cell_warn').length === 0) {
+                        if (test) {
+                            addToast("input[name='name']", "captName");//name
+                            addToast("input[name='age']", "captAge");//captAge
+                            addToast("input[name='address']", "captAddress");//captAddress
+                            //addToast("input[name='captcha']", "captCode");//captCode
+                            addToast("input[name='tel']", "captTel");//captTel
+                            addToast("input[name='fullAddress']", "captFulladdress");//captFulladdress
+                            addToast("input[name='shift']", "captNumberShift");//captNumberShift
+                            addToast("input[name='photo']","captPhoto");//captPhoto
+                        } else {
+                            //表单输入验证 第一个参数 id 第三个参数提示id
+                            //name 
+                            addCheck('userName', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captName');
+                            //age
+                            addCheckChange('age', /.*/, 'captAge');
+                            //photo
+                            addCheckChange('photo',/.*/,'captPhoto');
+                            //tel
+                            addCheck('tel', /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/, 'captTel');
+                            //address
+                            addCheckAddr('myAddrs', /[\s\S]*/, 'captAddress');
+                            //详细地址 fullAddress
+                            addCheck('fullAddress', /.*/, 'captFulladdress');
+                            //详细班次 numberShift 
+                            addCheck('numberShift', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captNumberShift'); //匹配中文、英文、数字但不包括下划线等符号
+                            //code
+                            //addCheck('captcha', /^\d{4}$/, 'captCode');
+                            
+                            var user_data = {
+                                "imei": imei,
+                                "online": true,
+                                "name": $("input[name='name']").val(),  //$("input[name='name']").val();
+                                "tel": $("input[name='tel']").val(),
+                                "sex": sex,
+                                "age": $("input[name='age']").val(),
+                                "address": $("input[name='address']").val() + $("input[name='fullAddress']").val(),
+                                "shift": $("input[name='radio1']:checked").parent('.weui-cell__ft').prev().children('p').text() + $("input[name='shift']").val()  //乘坐交通以及班次
+                            };
+                            var formData = new FormData($("#uploadForm")[0])  //创建一个forData 
+                            formData.append('photo', photoSource) //把file添加进去  name命名为photo
+                            formData.append("imei",imei);
+                            formData.append("corpId",corpId);
+                            //发送绑定用户Ajax
+                            setAjaxP("/user/boundDevice",formData,function(data){
+                                if(data.code == 0){
+                                    $('#Dialog_yes .weui-dialog__bd').text(data.msg);
+                                    $('#Dialog_yes').css('display', "block");
+                                }else{
+                                    $('#Dialog_yes .weui-dialog__bd').text(data.msg);
+                                    $('#Dialog_yes').css('display', "block");
+                                }
+                            },function(data){
+                                toastMsg = "请正确填写相关资料";
+                                $('#toastMsg').text(toastMsg);
+                                $('#Dialog_no').css("display", "block");
+                            });
+                        }
+                    } else {
+                        toastMsg = "请填写相关资料";
+                        $('#toastMsg').text(toastMsg);
+                        $('#Dialog_no').css("display", "block");
+                    }
+                } else {
+                    //未同意相关条款 display: block;
+                    toastMsg = "请同意相关条款";
+                    $('#toastMsg').text(toastMsg);
+                    $('#Dialog_no').css("display", "block");
+                }
+            });
+            //知道了 close
+            $('#close_no').on('click', function () {
+                $('#Dialog_no').css("display", "none");
+            });
+            $('#bind_back').on('click', function () {
+                window.history.go(-2);  //返回上一页
+            });
+            $('#unitied_back').on('click', function () {
+                $('#unitied').css("display", "none");
+            });
+            //设置权限，只有当管理员绑定用户时，才可以返回到应用页面
+            $('#close_yes').on('click', function () {
+                window.location.href = "../../index.html";
+            });
+
+            //表单输入验证
+            //name
+            addCheckUpL('userName', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captName', 20);
+            //age
+            // addCheckUp('age', /^[1-9]\d{0,3}$/, 'captAge');
+            // $("#age").on('input', function () {
+            //     if ($(this).val().length >= 3) {
+            //         $(this).val($(this).val().slice(0, 3));
+            //         var num = parseInt($(this).val());
+            //         if (num > 150) {
+            //             $('#captAge').addClass("weui-cell_warn");
+            //         }
+            //     }
+            // });
+            //tel
+            addCheckUpL('tel', /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/, 'captTel', 11);
+            //address
+            addCheckAddr('myAddrs', /[\s\S]*/, 'captAddress');
+            //code
+            //addCheck('captcha', /^\d{4}$/, 'captCode');
+            //详细地址 fullAddress
+            addCheckUpL('fullAddress', /.*/, 'captFulladdress', 20);
+            //详细班次 numberShift 
+            addCheckUpL('numberShift', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captNumberShift', 20); //匹配中文、英文、数字但不包括下划线等符号
+            addCheckChange('photo',/.*/,'captPhoto');
+            addCheckChange('age',/.*/,'captAge');
+            captLen("userName", 20);
+            // captLen("age", 3);
+            captLen("tel", 11);
+            captLen("fullAddress", 20);
+            captLen("numberShift", 20);
+            /*---------------------areaSlect login------------------------*/
+
+            /*---------------------areaSlect end------------------------*/
+
+            /*---------------------errorMsg login------------------------*/
+            errorMsg();
+            /*---------------------errorMsg end------------------------*/
+
+            /*-------------------------------------头像预览---------------------------------------*/
+            document.getElementById("photo").addEventListener( 'change', function () {
+                $(".clipbg").fadeIn();
+            }, false);
+            //上传图片点击事件
+            $('#shanchuan').click(function(){
+                // $("#photo").trigger('click');
+                $(".clipbg").fadeIn();
+            });
+            var clipArea = new  PhotoClip("#clipArea", {
+                size: [300, 300],//裁剪框大小
+                outputSize:[0,0],//打开图片大小，[0,0]表示原图大小
+                file: "#photo",
+                ok: "#clipBtn",
+                loadStart: function() { //图片开始加载的回调函数。this 指向当前 PhotoClip 的实例对象，并将正在加载的 file 对象作为参数传入。（如果是使用非 file 的方式加载图片，则该参数为图片的 url）
+                    $(".loading").removeClass("displaynone");
+
+                },
+                loadComplete: function() {//图片加载完成的回调函数。this 指向当前 PhotoClip 的实例对象，并将图片的 <img> 对象作为参数传入。
+                    $(".loading").addClass("displaynone");
+
+                },
+                done: function(dataURL) { //裁剪完成的回调函数。this 指向当前 PhotoClip 的实例对象，会将裁剪出的图像数据DataURL作为参数传入。			
+                    // console.log(dataURL);//dataURL裁剪后图片地址base64格式提交给后台处理
+                    $(".clipbg").fadeOut()
+                    //压缩头像
+                    let image = new Image()     //新建一个img标签（不嵌入DOM节点，仅做canvas操作)
+                    image.src = dataURL    //让该标签加载base64格式的原图
+                    image.onload = function() {    //图片加载完毕后再通过canvas压缩图片，否则图片还没加载完就压缩，结果图片是全黑的
+                        let canvas = document.createElement('canvas'), //创建一个canvas元素
+                        context = canvas.getContext('2d'),    //context相当于画笔，里面有各种可以进行绘图的API
+                        // imageWidth = image.width / 2,    //压缩后图片的宽度，这里设置为缩小一半
+                        // imageHeight = image.height / 2,    //压缩后图片的高度，这里设置为缩小一半
+                        imageWidth = 300
+                        imageHeight = 300
+                        data = ''    //存储压缩后的图片
+                        canvas.width = imageWidth    //设置绘图的宽度
+                        canvas.height = imageHeight    //设置绘图的高度
+                        
+                        //使用drawImage重新设置img标签中的图片大小，实现压缩。drawImage方法的参数可以自行查阅W3C
+                        context.drawImage(image, 0, 0, imageWidth, imageHeight)
+                        
+                        //使用toDataURL将canvas上的图片转换为base64格式
+                        data = canvas.toDataURL('image/jpeg')
+                        //将压缩后的图片显示到页面上的img标签
+                        document.getElementById('photo_show').src = data
+
+                        photoSource = dataURLtoFile(data);
+                        // console.log(photoSource);
+                        // console.log("压缩后："+photoSource.size/1024);
+                    }
+                    
+                }
+            });
+            $(".back").click(function(){
+                $(".clipbg").fadeOut()
+            })
+            
+            /*---------------------------base64转成file-------------------------*/
+            function dataURLtoFile(dataurl, filename) {//将base64转换为文件
+                var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                    bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+                while(n--){
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new File([u8arr], filename, {type:mime});
+            }
+            
+            /*---------------------------相关条款点击事件------------------------*/
+            $("#clause").click(function(){
+                $("#clauseDiv").css("display","block");
+            })
+            $("#guan").click(function(){
+                $("#clauseDiv").css("display","none");
+            })
+            $('.weui-mask').on('click',function () {
+                $('#clauseDiv').css("display", "none");
+            })
+        });
+
+        
+
+        $(function () {
+            var winH = $(window).height();
+            var categorySpace = 10;
+
+            $('.js_item').on('click', function () {
+                var id = $(this).data('id');
+                window.pageManager.go(id);
+            });
+            $('.js_category').on('click', function () {
+                var $this = $(this),
+                    $inner = $this.next('.js_categoryInner'),
+                    $page = $this.parents('.page'),
+                    $parent = $(this).parent('li');
+                var innerH = $inner.data('height');
+
+                if (!innerH) {
+                    $inner.css('height', 'auto');
+                    innerH = $inner.height();
+                    $inner.removeAttr('style');
+                    $inner.data('height', innerH);
+                }
+
+                if ($parent.hasClass('js_show')) {
+                    $parent.removeClass('js_show');
+                } else {
+                    $parent.siblings().removeClass('js_show');
+
+                    $parent.addClass('js_show');
+                    if (this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH) {
+                        var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                        if (scrollTop > this.offsetTop) {
+                            scrollTop = this.offsetTop - categorySpace;
+                        }
+
+                        $page.scrollTop(scrollTop);
+                    }
+                }
+
+                var winH = $(window).height();
+                var $foot = $('body').find('.page__ft');
+                if ($foot.length < 1) return;
+
+                if ($foot.position().top + $foot.height() < winH) {
+                    $foot.addClass('j_bottom');
+                } else {
+                    $foot.removeClass('j_bottom');
+                }
+            });
+        });
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>用户管理</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-navbar">
+                    <div class="weui-navbar__item weui-bar__item_on" id="bound">
+                        已绑定
+                    </div>
+                    <div class="weui-navbar__item" id="unBound">
+                        未绑定
+                    </div>
+                </div>
+                <div class="weui-tab__panel" style="overflow: visible;">
+                    <div id="loading">
+                        <div class="weui-loadmore">
+                            <i class="weui-loading"></i>
+                            <span class="weui-loadmore__tips">正在加载</span>
+                        </div>
+                    </div>
+                    <div id="bound_panel">
+                        <!--已绑定-->
+                        <div class="btnbox" style="margin-left: 20px; margin-top: 10px;">
+                            <button id="allElect" value="按钮" class="weui-btn weui-btn_mini weui-btn_primary"
+                                style="margin-right: -4px;">全选</button>
+                            <button id="antiElect" value="按钮" class="weui-btn weui-btn_mini weui-btn_warn">反选</button>
+                        </div>
+                        <div class="weui-cells weui-cells_checkbox"
+                            style="margin-top: 0; height: 80%; overflow: auto; font-size: 14px;" id="userList">
+
+                        </div>
+                        <a href="javascript:;" id="unBoundRail"
+                            class="weui-btn weui-btn_mini weui-btn_primary btn_bound">解绑用户</a>
+                        <a href="javascript:history.back();"
+                            class="weui-btn weui-btn_mini weui-btn_primary btn_back">返回</a>
+                    </div>
+                    <div id="unBound_panel">
+                        <!--未绑定-->
+                        <div class="btnbox_un"
+                            style="background-color: #f5f5f5; width: 121px; height: 29px; margin-left: 20px; margin-top: 10px;">
+                            <button id="allElect_un" value="按钮" class="weui-btn weui-btn_mini weui-btn_primary"
+                                style="margin-right: -4px;">全选</button>
+                            <button id="antiElect_un" value="按钮"
+                                class="weui-btn weui-btn_mini weui-btn_warn">反选</button>
+                        </div>
+                        <div class="weui-cells weui-cells_checkbox"
+                            style="margin-top: 0; height: 80%; overflow: auto; font-size: 14px;" id="userList_un">
+
+                        </div>
+                        <a href="javascript:;" id="boundRail"
+                            class="weui-btn weui-btn_mini weui-btn_primary btn_bound">绑定用户</a>
+                        <a href="javascript:history.back();"
+                            class="weui-btn weui-btn_mini weui-btn_primary btn_back">返回</a>
+                    </div>
+
+                    <!--bound_log know-->
+                    <div class="js_dialog" id="bound_log" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__bd"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">知道了</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--bound_log know-->
+
+                    <!--二次确认 BEGIN-->
+                    <div class="js_dialog" id="secend_log" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__hd"><strong class="weui-dialog__title">用户管理</strong></div>
+                            <div class="weui-dialog__bd"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--二次确认 END-->
+
+                    <!--二次确认_un BEGIN-->
+                    <div class="js_dialog" id="secend_log_un" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__hd"><strong class="weui-dialog__title">用户管理</strong></div>
+                            <div class="weui-dialog__bd"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--二次确认_un END-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    /*rail*/
+    $(function(){
+        captLogin();
+        var patams = getPatams();
+        var railId = patams.number;
+/*---------------------------------------已绑定 #bound login---------------------------------------*/
+        //#unBoundRail
+        var userObjArr = [],
+            num = 1;
+        showUserlist(1, 100);
+        $('#unBoundRail').on('click', function(){
+            userObjArr = [];
+            //msg #bound_log .weui-dialog__bd 
+            //know #bound_log a
+            var idArr = [],
+                idArrlen,
+                i;
+            $("[name=userbox]:checked").each(function() {
+                idArr.push(parseInt($(this).attr("id"))); 
+            });
+            idArrlen = idArr.length
+            for(i=0; i<idArrlen; i++) {
+                userObjArr.push(idArr[i]);
+            }
+            
+            if($("[name=userbox]:checked").length === 0) {
+                $('#bound_log .weui-dialog__bd ').text("请先选择用户再进行解绑");
+                $('#bound_log').css("display", "block");
+            }else {
+                //msg #secend_log weui-dialog__bd //sure #secend_log .weui-dialog__btn_primary //取消 #secend_log .weui-dialog__btn_default
+                $('#secend_log .weui-dialog__bd').text("确定解绑这些用户");
+                $('#secend_log').css("display", "block");
+            }
+        });
+        $('#secend_log .weui-dialog__btn_primary').on('click', function(){
+            setAjaxN("/rail/batchDeleteRailUser?userId="+userObjArr, function(data){
+                $('#userList').html('');
+                $('#userList_un').html('');
+                showUserlist(1, 100);
+                showUserlist_un(1, 100);
+                $('#secend_log').css("display", "none");
+                $('#bound_log .weui-dialog__bd ').text(data.msg);
+                $('#bound_log').css("display", "block");
+            }, function(data){
+                window.location.href = "./empty_page.html";
+                $('#secend_log').css("display", "none");
+                $('#bound_log .weui-dialog__bd ').text(data.msg);
+                $('#bound_log').css("display", "block");
+            });
+        });
+        $('#secend_log .weui-dialog__btn_default').on('click', function(){
+            $('#secend_log').css("display", "none");
+        });
+        $('#bound_log a').on('click', function() {
+            $('#bound_log').css("display", "none");
+        });
+        
+        //antiElect
+        $("#antiElect").click(function () {
+            $('[name=userbox] ').each(function () {
+                //$(this).attr("checked", !$(this).attr("checked"));
+                this.checked = !this.checked;
+            })
+        });
+        var allBor = false;
+        $("#allElect").click(function () {
+            if($("[name=userbox]:checked").length === $('#userList label').length) {
+                allBor = true;
+            }else {
+                allBor = false;
+            }
+            allBor = !allBor;
+            if(allBor) {
+                $('[name=userbox] ').each(function () {
+                    //$(this).attr("checked", !$(this).attr("checked"));
+                    this.checked = true;
+                });
+            }else {
+                $('[name=userbox] ').each(function () {
+                        //$(this).attr("checked", !$(this).attr("checked"));
+                        this.checked = false;
+                    });
+                }
+            });
+            $('#bound').on('click', function(){
+                $('#bound_panel').fadeIn(100);
+                $('#unBound_panel').css("display", "none");
+            });
+            $('#userList').on('click', 'a', function(){
+                //window.location.href = "./show_user.html?userId=" + $(this).attr("id");
+            });
+            $('#userList').on('scroll', function() {
+                if(this.scrollTop>=this.scrollHeight - this.offsetHeight) {
+                    setAjaxNA("/rail/listUserByRail?railId="+railId+"&pageSize=100&pageNum="+num, function(data){
+                        if(data.data.list.length<100) {
+                            return;
+                        }
+                        num++;
+                        showUserlist(num, 100);
+                    }, function() {
+                        window.location.href = "./empty_page.html";
+                    });
+                }
+            });
+            function showUserlist(page, limit) {
+                setAjaxN("/rail/listUserByRail?railId="+railId+"&pageSize="+limit+"&pageNum="+page, function(data){
+                    var userArr = data.data.list,
+                        userLen = userArr.length,
+                        userObj = {},
+                        i;
+                        //console.log(userLen)
+                    if(userLen === 0) {
+                        var noYet = $(`
+                            <div class="weui-loadmore weui-loadmore_line" style="height: 100%; width: 65%;">
+                                <span class="weui-loadmore__tips">暂无内容</span>
+                            </div>
+                            `);
+                        $('#userList').html('');
+                        $('#bound_panel .btnbox').css("opacity", "0");
+                        $('#userList').append(noYet);
+                    }else {
+                        $('#bound_panel .btnbox').css("opacity", "1");
+                    for(i=0; i<userLen; i++) {
+                        userObj = {
+                            "userName": userArr[i].name,
+                            "num": i+1,
+                            "userId": userArr[i].id,
+                            "userTel": userArr[i].tel
+                        }
+                        addElect(userObj);
+                    } 
+                }
+            }, function() {
+                window.location.href = "./empty_page.html";
+            });
+        }
+        function addElect(obj){//id, name, serNum, userSum
+            $('#userList').append(createUser(obj));
+        }
+        function createUser(obj) {
+            var link = $(
+                `<label class="weui-cell weui-cell_active weui-check__label" for="`+ obj.userId +`">
+                    <div class="weui-cell__hd">
+                        <input type="checkbox" class="weui-check" name="userbox" id="`+ obj.userId+`"/>
+                        <i class="weui-icon-checked"></i>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <p class="userName">`+ obj.userName +`</p>
+                        <p class="userTel">`+ obj.userTel +`</p>
+                    </div>
+                </label>`
+            );
+            return link;
+        }
+/*---------------------------------------已绑定 #bound end---------------------------------------*/
+
+/*---------------------------------------未绑定 #unBound login---------------------------------------*/
+        //#boundRail
+        var userObjArr_un = [],
+            num_un = 1;
+        var userParmas = {
+            railId: null,
+            userId: []
+        }
+        showUserlist_un(1, 100);
+        $('#boundRail').on('click', function(){
+            userObjArr_un = [];
+            //msg #bound_log .weui-dialog__bd 
+            //know #bound_log a
+            var idArr = [],
+                idArrlen,
+                i,
+                userObj;
+            $("[name=userbox_un]:checked").each(function() {
+                idArr.push(parseInt($(this).attr("id"))); 
+            });
+            idArrlen = idArr.length;
+            userParmas.railId = railId;
+            for(i=0; i<idArrlen; i++) {
+                userParmas.userId.push(idArr[i]);
+            }
+            
+            if($("[name=userbox_un]:checked").length === 0) {
+                $('#bound_log .weui-dialog__bd ').text("请先选择用户再进行绑定");
+                $('#bound_log').css("display", "block");
+            }else {
+                //msg #secend_log weui-dialog__bd //sure #secend_log .weui-dialog__btn_primary //取消 #secend_log .weui-dialog__btn_default
+                $('#secend_log_un .weui-dialog__bd').text("确定绑定这些用户");
+                $('#secend_log_un').css("display", "block");
+            }
+        });
+        $('#secend_log_un .weui-dialog__btn_primary').on('click', function(){
+            setAjaxN("/rail/batchUpdateUser?railId="+userParmas.railId+"&userId="+userParmas.userId, function(data){
+                $('#userList').html('');
+                $('#userList_un').html('');
+                showUserlist_un(1, 100);
+                showUserlist(1, 100);
+                $('#secend_log_un').css("display", "none");
+                $('#bound_log .weui-dialog__bd ').text(data.msg);
+                $('#bound_log').css("display", "block");
+            }, function(data){
+                //window.location.href = "./empty_page.html";
+                $('#secend_log_un').css("display", "none");
+                $('#bound_log .weui-dialog__bd ').text(data.msg);
+                $('#bound_log').css("display", "block");
+            });
+        });
+        $('#secend_log_un .weui-dialog__btn_default').on('click', function(){
+            $('#secend_log_un').css("display", "none");
+        });
+
+        //#allElect_un #antiElect_un
+        var allBor_un = false;
+        $("#allElect_un").click(function () {
+            if($("[name=userbox_un]:checked").length === $('#userList_un label').length) {
+                allBor = true;
+            }else {
+                allBor = false;
+            }
+            allBor = !allBor;
+            if(allBor) {
+                $('[name=userbox_un]').each(function () {
+                    this.checked = true;
+                });
+            }else {
+                $('[name=userbox_un]').each(function () {
+                    this.checked = false;
+                });
+            }
+        });
+        $("#antiElect_un").click(function () {
+            $('[name=userbox_un] ').each(function () {
+                this.checked = !this.checked;
+            });
+        });
+        $('#unBound').on('click', function(){
+            $('#bound_panel').css("display", "none");
+            $('#unBound_panel').fadeIn(100);
+        });
+        $('#userList_un').on('scroll', function() {
+            if(this.scrollTop>=this.scrollHeight - this.offsetHeight) {
+                setAjaxNA("/rail/listUserByNoRail?pageSize=100&pageNum="+num_un, function(data){
+                    if(data.data.list.length<100) {
+                        return;
+                    }
+                    num_un++;
+                    showUserlist_un(num_un, 100);
+                }, function() {
+                    window.location.href = "./empty_page.html";
+                });
+            }
+        });
+        function showUserlist_un (page, limit) {
+            setAjaxN("/rail/listUserByNoRail?pageSize="+ limit +"&pageNum=" + page, function(data){
+                var userArr = data.data.list,
+                    userLen = userArr.length,
+                    //userLen = 10,
+                    userObj = {},
+                    i;
+                    //console.log(userLen)
+                if(userLen === 0) {
+                    var noYet = $(`
+                        <div class="weui-loadmore weui-loadmore_line" style="height: 85%; width: 65%;">
+                            <span class="weui-loadmore__tips">暂无内容</span>
+                        </div>
+                        `);
+                    $('#userList_un').html('');
+                    $('#unBound_panel .btnbox_un').css("opacity", "0");
+                    $('#userList_un').append(noYet);
+                }else {
+                    $('#unBound_panel .btnbox_un').css("opacity", "1");
+                    for(i=0; i<userLen; i++) {
+                        userObj = {
+                            "userName": userArr[i].name,
+                            "num": i+1,
+                            "userId": userArr[i].id,
+                            "userTel": userArr[i].tel
+                        }
+                        addElect_un(userObj);
+                    }
+                }
+            }, function() {
+                window.location.href = "./empty_page.html";
+            });
+        }
+        function addElect_un (obj){//id, name, serNum, userSum
+            $('#userList_un').append(createUser_un(obj));
+        }
+        function createUser_un (obj) {
+            var link = $(
+                `<label class="weui-cell weui-cell_active weui-check__label" for="`+ obj.userId +`">
+                    <div class="weui-cell__hd">
+                        <input type="checkbox" class="weui-check" name="userbox_un" id="`+ obj.userId+`"/>
+                        <i class="weui-icon-checked"></i>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <p class="userName">`+ obj.userName+`</p>
+                        <p class="userTel">`+ obj.userTel +`</p>
+                    </div>
+                </label>`
+            );
+            return link;
+        }
+/*---------------------------------------未绑定 #unBound end---------------------------------------*/   
+});
+
+    $(function(){
+        //获取corpId
+        var corpId = getCookie();
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "../map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+
+        setTimeout(function(){
+            $('#loading').css("display", "none");
+        }, 500);
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+        $('.weui-navbar__item').on('click', function () {
+            $(this).addClass('weui-bar__item_on').siblings('.weui-bar__item_on').removeClass('weui-bar__item_on');
+        });
+    });
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        .weui-btn+.weui-btn {
+            margin-top: 0;
+        }
+
+        .weui-cells:after {
+            height: 0;
+            border: 0;
+        }
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        #loading,
+        #loading_un {
+            height: 100%;
+            width: 100%;
+            background-color: #fff;
+            z-index: 3;
+            position: fixed;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-tab__panel {
+            padding: 0;
+        }
+
+        #bound_panel {
+            display: block;
+            height: 90%;
+        }
+
+        #unBound_panel {
+            display: none;
+            height: 90%;
+        }
+
+        #userList:before,
+        #userList_un:before {
+            border-top: none;
+        }
+
+        .userTel {
+            font-size: 12px;
+            color: #929292;
+        }
+
+        .userName {
+            color: #3b3b3b;
+        }
+
+        .weui-cell {
+            padding: 7px 15px;
+        }
+
+        #bound {
+            color: #000;
+        }
+
+        #unBound {
+            color: #000;
+        }
+
+        /*-------------------boundBtn login------------------------*/
+        .btn_bound,
+        .btn_back {
+            width: 70%;
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+            transform: translateX(-50%);
+        }
+
+        .btn_bound {
+            margin-left: 50%;
+            margin-top: 10px;
+        }
+
+        .btn_back {
+            background-color: #cecece;
+            margin: 0 50% !important;
+        }
+
+        /*-------------------boundBtn en------------------------*/
+        .weui-cells_checkbox .weui-check:checked+.weui-icon-checked:before {
+            content: '\EA06';
+            color: #287de1;
+        }
+
+        /*------------------bound_log login---------------------------*/
+        #bound_log {}
+
+        /*------------------bound_log login---------------------------*/
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

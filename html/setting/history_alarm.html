@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>用户信息</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="page__hd" style="padding: 20px;">
+                        <img src="images/alarm_history.png" style="width: 100px; vertical-align: middle;">
+                        <span style="font-size: 20px;">历史告警</span>
+                    </div>
+                    <div class="page__bd">
+                        <div class="weui-cells__title"
+                            style="background-color: #f8f8f8; height: 9.2px; margin-bottom: 0;"></div>
+                        <div class="weui-cells">
+                            <div class="weui-cell  weui-cell_access" id="history_echarts"
+                                style="width: 100%; height: 420px; background-color: #fff; padding-left: 5px; padding-top: 0;">
+                            </div>
+                        </div>
+                    </div>
+                    <a href="javascript:history.back();" class="weui-btn weui-btn_mini weui-btn_primary"
+                        style=" width: 50%; height: 40px; line-height: 40px; padding: 0; font-size: 20px; letter-spacing: 2px; transform: translateX(-50%); margin-left: 50%; margin-top: 20px;">返回</a>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    $(function(){
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+
+    $(function(){
+    captLogin();
+/*---------------历史数据 login-----------------*/
+    showHistory();
+    setInterval(showHistory, 600000);
+    function showHistory() {
+        setAjaxN("/alarm/listAlarmView", function(data){
+        var alarmSumArr = [];
+        var personSumArr = [];
+        var psumArr = [];
+        var tsumArr = [];
+        var gmtCreateArr = [];
+        var arr = data.data,
+        creatTime;
+        for(var i=0,len=data.data.length; i<len; i++) {
+            alarmSumArr.push(arr[i].alarmSum);
+            personSumArr.push(arr[i].personSum);
+            psumArr.push(arr[i].psum);
+            tsumArr.push(arr[i].tsum);
+            creatTime = arr[i].gmtCreate;
+            creatTime = creatTime.substr(0,10);
+            gmtCreateArr.push(creatTime);
+        }
+        /*----------历史图表 login----------*/
+        setTimeout(function () {
+        var myChart = echarts.init(document.getElementById('history_echarts'));
+        option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            },
+            legend: {
+                data: ['告警总数', '告警总人数', '位置告警总数', '体温告警总数']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: gmtCreateArr,
+                    axisLabel: {
+                        rotate: 60
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value'
+                }
+            ],
+            series: [
+                {
+                    name: '告警总数',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {
+                        normal: {
+                            color: '#fff'
+                        }
+                    },
+                    data: alarmSumArr
+                },
+                {
+                    name: '告警总人数',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {
+                        normal: {
+                            color: '#fff'
+                        }
+                    },
+                    data: personSumArr
+                },
+                {
+                    name: '体温告警总数',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {
+                        normal: {
+                            color: '#fff'
+                        }
+                    },
+                    data: tsumArr
+                },
+                {
+                    name: '位置告警总数',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {
+                        normal: {
+                            color: '#fff'
+                        }
+                    },
+                    data: psumArr
+                }
+            ]
+        };
+        myChart.setOption(option);
+
+        });
+        /*----------历史图表 end----------*/
+    }, function(){
+        window.location.href = "./empty_page.html";
+    });
+    }
+/*---------------历史数据 end--------------------*/
+    });
+</script>
+        <style scoped>
+            .weui-tabbar__item .weui-tabbar__label {
+                color: #929292;
+            }
+
+            .weui-bar__item_on {
+                color: #4377ff;
+            }
+
+            .page {}
+
+            /*---------------------tabbar------------------------*/
+            .weui-tabbar {
+                background-color: #fff;
+            }
+
+            /*---------------------grid------------------------*/
+            .weui-grids .weui-grid {
+                background-color: #fff;
+            }
+
+            .BMap_cpyCtrl {
+                display: none;
+            }
+
+            .weui-cell_access .weui-cell__ft:after {
+                content: "";
+                border-style: none;
+                right: -10px;
+            }
+
+            .weui-cell_access .weui-cell__ft {
+                padding-right: 0;
+            }
+        </style>
+        </script>
+        <script src="../../zepto.min.js"></script>
+        <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+        <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+        <script src="../../example.js"></script>
+</body>
+
+</html>

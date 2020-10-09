@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>编辑成员</title>
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="black" name="apple-mobile-web-app-status-bar-style">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="email=no" name="format-detection">
+    <link href="../../css/layout.min.css" rel="stylesheet" />
+    <link href="../../css/scs.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+    <style>
+        #myAddrs {
+            font-size: 16px;
+            border: 0;
+            color: #000;
+            display: flex;
+        }
+
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-cells__title {
+            font-size: 18px;
+            margin: 0;
+            background: #f2f3f5;
+            padding: .1em 15px;
+        }
+
+        /*---------------------toast login------------------------*/
+        .my-toast {
+            height: 26px;
+            min-height: 0;
+            border-radius: 5px;
+            bottom: 57px;
+            position: fixed;
+            z-index: 5000;
+            left: 50%;
+            margin-left: -3.8em;
+            background: rgba(17, 17, 17, 0.7);
+            text-align: center;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 14px;
+            padding: 0 27px;
+            transform: translateX(-10%);
+        }
+
+        /*---------------------toast end------------------------*/
+
+        #delMemberLog .weui-dialog__bd {
+            padding-bottom: 0;
+        }
+
+        #delMemberLog .weui-dialog__title {
+            font-size: 16px;
+            font-weight: 400;
+            color: #000;
+        }
+
+        #delMemberLog .weui-dialog__hd {
+            font-size: 17px;
+        }
+
+        #delMemberLog .weui-dialog__ft a {
+            color: #1e62b3;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <!--<div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>-->
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="page__bd">
+                        <!-- form 表单-->
+                        <form>
+                            <div class="weui-cells__title">基本信息</div>
+                            <div class="weui-cells weui-cells_form">
+                                <!-- name -->
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">姓名<img
+                                                src="../../images/xing.png" alt="" style="width: 20px;"></label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="name" id="userName" placeholder="必填" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captName">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active weui-cell_select weui-cell_select-after">
+                                    <div class="weui-cell__hd">
+                                        <label for="" class="weui-label">性别</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <select class="weui-select" name="sex" id="sex_choose">
+                                            <option value="1">男</option>
+                                            <option value="2">女</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">年龄</label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="number" name="age" id="age" maxlength="3"
+                                            placeholder="选填" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captAge">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd">
+                                        <label class="weui-label">手机</label>
+                                    </div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" type="number" id="tel" name="tel" maxlength="11"
+                                            placeholder="选填" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captTel">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="weui-cells__title">地址</div>
+                            <div class="weui-cells weui-cells_form">
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">地址</label></div>
+                                    <div class="weui-cell__bd">
+                                        <input type="text" class="weui-input" name="address" readonly
+                                            placeholder="点击设置地址" id="myAddrs" data-key="4-84-1298"
+                                            style="border-radius: 0;" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captAddress">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                                <div class="weui-cell weui-cell_active">
+                                    <div class="weui-cell__hd"><label class="weui-label">详细地址</label></div>
+                                    <div class="weui-cell__bd">
+                                        <input class="weui-input" name="fullAddress" id="fullAddress"
+                                            placeholder="请输入详细地址" />
+                                    </div>
+                                    <div class="weui-cell__ft" id="captFulladdress">
+                                        <i class="weui-icon-warn"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="javascript:" class="weui-btn weui-btn_primary" id="bind_user"
+                                style="display: block; margin-top: 10px; width: 90%;">保存</a>
+                    </div>
+                    </form>
+                </div>
+                <!--BEGIN dialog2-->
+                <div class="js_dialog" id="Dialog_no" style="display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd" id="toastMsg"></div>
+                        <div class="weui-dialog__ft">
+                            <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                id="close_no">知道了</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="js_dialog" id="Dialog_yes" style="display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd">绑定成功</div>
+                        <div class="weui-dialog__ft">
+                            <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                id="close_yes">返回</a>
+                        </div>
+                    </div>
+                </div>
+                <!--设备已绑定提示框-->
+                <div class="js_dialog" id="unitied" style="display: none;">
+                    <div class="weui-mask"></div>
+                    <div class="weui-dialog">
+                        <div class="weui-dialog__bd"></div>
+                        <div class="weui-dialog__ft">
+                            <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary"
+                                id="unitied_back">返回</a>
+                        </div>
+                    </div>
+                </div>
+                <!--BEGIN toast-->
+                <div id="toast" style="display: none;">
+                    <div class="my-toast">
+                        <p class="weui-toast__content">已完成</p>
+                    </div>
+                </div>
+                <!--end toast-->
+            </div>
+
+            <!--BEGIN modify memberLog-->
+            <div class="js_dialog" id="delMemberLog" style="display: none;">
+                <div class="weui-mask"></div>
+                <div class="weui-dialog weui-skin_android">
+                    <div class="weui-dialog__hd">移除成员</div>
+                    <div class="weui-dialog__bd">
+                        <strong class="weui-dialog__title">只在此部门移除“<span></span>”，并不会解除绑定。</strong>
+                    </div>
+                    <div class="weui-dialog__ft">
+                        <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                        <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                    </div>
+                </div>
+            </div>
+            <!--END modify memberLog-->
+        </div>
+    </div>
+    </div>
+
+
+    <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+    <script src="../../js/jquery.scs.min.js"></script>
+    <script src="../../js/CNAddrArr.min.js"></script>
+    <script>
+        $(function () {
+            captLogin();
+            //bind
+            var patams = getPatams();
+            var id = parseInt(patams.id),
+                mId = parseInt(patams.mId);
+            var toastMsg;//提示信息
+
+            /**
+             * 通过数组id获取地址列表数组
+             *
+             * @param {Number} id
+             * @return {Array} 
+             */
+            function getAddrsArrayById(id) {
+                var results = [];
+                if (addr_arr[id] != undefined)
+                    addr_arr[id].forEach(function (subArr) {
+                        results.push({
+                            key: subArr[0],
+                            val: subArr[1]
+                        });
+                    });
+                else {
+                    return;
+                }
+                return results;
+            }
+            /**
+             * 通过开始的key获取开始时应该选中开始数组中哪个元素
+             *
+             * @param {Array} StartArr
+             * @param {Number|String} key
+             * @return {Number} 
+             */
+            function getStartIndexByKeyFromStartArr(startArr, key) {
+                var result = 0;
+                if (startArr != undefined)
+                    startArr.forEach(function (obj, index) {
+                        if (obj.key == key) {
+                            result = index;
+                            return false;
+                        }
+                    });
+                return result;
+            }
+            setAjaxN("/user/getUserById?userId=" + id, function (data) {
+                var obj = data.data;
+                $("input[name='name']").val(obj.name);
+                if (obj.sex == '女') {
+                    $('#sex_choose').val('2');
+                } else {
+                    $('#sex_choose').val('1');
+                };
+                $('#delMemberLog .weui-dialog__title span').text(obj.name);
+            }, function (XMLHttpRequest) {
+                alert(XMLHttpRequest.status);
+                location.href = "empty_page.html";
+            })
+
+            //bind the click event for 'input' element
+            $("#myAddrs").on('click', function () {
+                //console.log('选择地区')
+                var PROVINCES = [],
+                    startCities = [],
+                    startDists = [];
+                //Province data，shall never change.
+                addr_arr[0].forEach(function (prov) {
+                    PROVINCES.push({
+                        key: prov[0],
+                        val: prov[1]
+                    });
+                });
+                //init other data.
+                var $input = $(this),
+                    dataKey = $input.attr("data-key"),
+                    provKey = 1, //default province 北京
+                    cityKey = 36, //default city 北京
+                    distKey = 37, //default district 北京东城区
+                    distStartIndex = 0, //default 0
+                    cityStartIndex = 0, //default 0
+                    provStartIndex = 0; //default 0
+
+                if (dataKey != "" && dataKey != undefined) {
+                    var sArr = dataKey.split("-");
+                    if (sArr.length == 3) {
+                        provKey = sArr[0];
+                        cityKey = sArr[1];
+                        distKey = sArr[2];
+
+                    } else if (sArr.length == 2) { //such as 台湾，香港 and the like.
+                        provKey = sArr[0];
+                        cityKey = sArr[1];
+                    }
+                    startCities = getAddrsArrayById(provKey);
+                    startDists = getAddrsArrayById(cityKey);
+                    provStartIndex = getStartIndexByKeyFromStartArr(PROVINCES, provKey);
+                    cityStartIndex = getStartIndexByKeyFromStartArr(startCities, cityKey);
+                    distStartIndex = getStartIndexByKeyFromStartArr(startDists, distKey);
+                }
+                var navArr = [{//3 scrollers, and the title and id will be as follows:
+                    title: "省",
+                    id: "scs_items_prov"
+                }, {
+                    title: "市",
+                    id: "scs_items_city"
+                }, {
+                    title: "区",
+                    id: "scs_items_dist"
+                }];
+                SCS.init({
+                    navArr: navArr,
+                    onOk: function (selectedKey, selectedValue) {
+                        $input.val(selectedValue).attr("data-key", selectedKey);
+                    }
+                });
+                var distScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[2].id,
+                    dataArr: startDists,
+                    startIndex: distStartIndex
+                });
+                var cityScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[1].id,
+                    dataArr: startCities,
+                    startIndex: cityStartIndex,
+                    onChange: function (selectedItem, selectedIndex) {
+                        distScroller.render(getAddrsArrayById(selectedItem.key), 0); //re-render distScroller when cityScroller change
+                    }
+                });
+                var provScroller = new SCS.scrollCascadeSelect({
+                    el: "#" + navArr[0].id,
+                    dataArr: PROVINCES,
+                    startIndex: provStartIndex,
+                    onChange: function (selectedItem, selectedIndex) { //re-render both cityScroller and distScroller when provScroller change
+                        cityScroller.render(getAddrsArrayById(selectedItem.key), 0);
+                        distScroller.render(getAddrsArrayById(cityScroller.getSelectedItem().key), 0);
+                    }
+                });
+            });
+            $('#bind_user').on('click', function () {
+                var sex = $('#sex_choose')[0].selectedOptions[0].innerText;
+                //检测是否全部输入正确 
+                var test = $("input[name='name']").val() === '';
+                if ($('.weui-cell_warn').length === 0) {
+                    if (test) {
+                        addToast("input[name='name']", "captName");//name
+                    } else {
+                        //表单输入验证 第一个参数 id 第三个参数提示id
+                        //name 
+                        addCheck('userName', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captName');
+                        //age
+                        addCheckUp('age', /^[1-9]\d{0,3}$/, 'captAge');
+                        //tel
+                        addCheck('tel', /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/, 'captTel');
+                        //address
+                        addCheckAddrUp('myAddrs', /[\s\S]*/, 'captAddress');
+                        //详细地址 fullAddress
+                        addCheckUp('fullAddress', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captFulladdress');
+                        //获取用户信息     
+                        setAjaxN("/user/getUserById?userId=" + id, function (data) {
+                            var obj = data.data;
+                            var user_data = {
+                                "id": id,
+                                "name": $("input[name='name']").val(),
+                                "tel": $("input[name='tel']").val() || obj.tel,
+                                "sex": sex,
+                                "age": $("input[name='age']").val() || obj.age,
+                                "address": $("input[name='address']").val() + $("input[name='fullAddress']").val() || obj.address
+                            };// 
+                            setAjax("/user/updateUser", user_data, function (data) {
+                                if (data.code===0) {
+                                    toastMsg('修改成功');
+                                    /*setTimeout(function(){
+                                      //window.history.back();
+                                        self.location = document.referrer;
+                                    }, 1500);*/
+                                    setTimeout(function () {
+                                        window.history.back();
+                                    }, 1500);    
+                                }else{
+                                    toastMsg(data.msg);
+                                }
+                            }, function (XMLHttpRequest) {
+                                alert(XMLHttpRequest.status);
+                                location.href = "empty_page.html";
+                            });
+                        }, function (XMLHttpRequest) {
+                            alert(XMLHttpRequest.status);
+                            location.href = "empty_page.html";
+                        });
+                    }
+                } else {
+                    toastMsg = "请填写相关资料";
+                    $('#toastMsg').text(toastMsg);
+                    $('#Dialog_no').css("display", "block");
+                }
+            });
+
+            /*----------------------------del_user login-----------------------------------*/
+            $('form').on('click', '#del_user', function () {
+                $('#delMemberLog').css("display", "block");
+            });
+            $('#delMemberLog .weui-dialog__btn_default').on('click', function () {
+                $('#delMemberLog').css("display", "none");
+            });
+            if (mId !== 1) {
+                var str = `
+            <a href="javascript:" class="weui-btn weui-btn_primary" id="del_user" style="display: block; margin-top: 10px; width: 90%;">移除</a>
+            `;
+                $('#bind_user').parent().append(str);
+            }
+            $('#delMemberLog .weui-dialog__btn_primary').on('click', function () {
+                var obj = {},
+                    arr = [];
+                arr.push(id);
+                obj = {
+                    "depId": mId,
+                    "userIds": arr
+                }
+                setAjaxArr("/dept/removeMember", obj, function (data) {
+                    toastMsg('移除成功');
+                    if (data.code === 0) {
+                        $('#delMemberLog').css("display", "none");
+                    }
+                    setTimeout(function () {
+                        window.history.back();
+                    }, 1500);
+                }, function (XMLHttpRequest) {
+                    alert(XMLHttpRequest.status);
+                    window.location.href = "empty_page.html";
+                });
+            });
+            $('#delMemberLog .weui-mask').on('click', function () {
+                $('#delMemberLog').css("display", "none");
+            });
+
+            /*----------------------------del_user end-----------------------------------*/
+
+            //知道了 close
+            $('#close_no').on('click', function () {
+                $('#Dialog_no').css("display", "none");
+            });
+            $('#unitied_back').on('click', function () {
+                $('#unitied').css("display", "none");
+            });
+            //设置权限，只有当管理员绑定用户时，才可以返回到应用页面
+            $('#close_yes').on('click', function () {
+                $('#Dialog_yes').css("display", "none");
+            });
+            //表单输入验证
+            //name
+            addCheckUpL('userName', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captName', 20);
+            //age
+            addCheckUp('age', /^[1-9]\d{0,3}$/, 'captAge');
+            $("#age").on('input', function () {
+                if ($(this).val().length >= 3) {
+                    $(this).val($(this).val().slice(0, 3));
+                    var num = parseInt($(this).val());
+                    if (num > 150) {
+                        $('#captAge').addClass("weui-cell_warn");
+                    }
+                }
+            });
+            //tel
+            //addCheckUp('tel', /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/, 'captTel');
+            addCheckUpL('tel', /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/, 'captTel', 11);
+            //address
+            addCheckAddrUp('myAddrs', /[\s\S]*/, 'captAddress');
+            //addCheck('captcha', /^\d{4}$/, 'captCode');
+            //详细地址 fullAddress
+            addCheckUpL('fullAddress', /^[\u4E00-\u9FA5A-Za-z0-9]+$/, 'captFulladdress', 20);
+
+            captLen("userName", 20);
+            captLen("tel", 11);
+            captLen("fullAddress", 20);
+            /*---------------------areaSlect login------------------------*/
+            function toastMsg(txt) {
+                var $toast = $('#toast');
+                if ($toast.css('display') != 'none') return;
+                $('#toast p').text(txt);
+                $toast.fadeIn(100);
+                var tmt = setTimeout(function () {
+                    $toast.fadeOut(100);
+                }, 1500);
+            }
+            /*---------------------areaSlect end------------------------*/
+
+            /*---------------------errorMsg login------------------------*/
+            errorMsg();
+            /*---------------------errorMsg end------------------------*/
+        });
+
+        $(function () {
+            var winH = $(window).height();
+            var categorySpace = 10;
+
+            $('.js_item').on('click', function () {
+                var id = $(this).data('id');
+                window.pageManager.go(id);
+            });
+            $('.js_category').on('click', function () {
+                var $this = $(this),
+                    $inner = $this.next('.js_categoryInner'),
+                    $page = $this.parents('.page'),
+                    $parent = $(this).parent('li');
+                var innerH = $inner.data('height');
+
+                if (!innerH) {
+                    $inner.css('height', 'auto');
+                    innerH = $inner.height();
+                    $inner.removeAttr('style');
+                    $inner.data('height', innerH);
+                }
+
+                if ($parent.hasClass('js_show')) {
+                    $parent.removeClass('js_show');
+                } else {
+                    $parent.siblings().removeClass('js_show');
+
+                    $parent.addClass('js_show');
+                    if (this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH) {
+                        var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                        if (scrollTop > this.offsetTop) {
+                            scrollTop = this.offsetTop - categorySpace;
+                        }
+
+                        $page.scrollTop(scrollTop);
+                    }
+                }
+
+                var winH = $(window).height();
+                var $foot = $('body').find('.page__ft');
+                if ($foot.length < 1) return;
+
+                if ($foot.position().top + $foot.height() < winH) {
+                    $foot.addClass('j_bottom');
+                } else {
+                    $foot.removeClass('j_bottom');
+                }
+            });
+        });
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+
+</body>
+
+</html>

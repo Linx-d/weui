@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+  <title>用户解绑</title>
+  <link rel="stylesheet" href="../../css/weui.css"/>
+  <link rel="stylesheet" href="../../example.css" />
+  <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+  <script src="../../echarts.min3.js"></script>
+  <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+  <div class="container" id="container">
+    <div class="page__bd" style="height: 100%;">
+      <div class="weui-tab">
+        <div class="weui-tab__panel">
+          <div class="page__hd" style="padding: 15px; overflow: auto;">
+            <div class="info_hd">
+              <img src="" style="width: 100px;height: 100px; vertical-align: middle;">
+            </div>
+            <div class="info_bd">
+              <div class="info_bd_t">用户详情</div>
+              <div class="info_bd_m">
+                <span>
+                  <img src="" alt="">
+                  <i>在线</i>
+                </span>
+                <strong>36.5</strong>
+              </div>
+              <div class="info_bd_b">
+                <img src="" style="width: 35px;" alt="">
+              </div>
+            </div>
+          </div>
+          <div class="page__bd">
+            <div class="weui-cells__title">用户详细信息</div>
+            <div class="weui-cells">
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>年龄</p>
+                </div>
+                <div class="weui-cell__ft" id="age"></div>
+              </a>
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>性别</p>
+                </div>
+                <div class="weui-cell__ft" id="sex"></div>
+              </a>
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>电话</p>
+                </div>
+                <div class="weui-cell__ft" id="tel"></div>
+              </a>
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>地址</p>
+                </div>
+                <div class="weui-cell__ft" id="address" style="width: 205px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+              </a>
+              <!--/device/getDeviceInfoByUserId?userId=2-->
+            </div>
+
+            <div class="weui-cells__title">防疫信息</div>
+            <div class="weui-cells">
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>围栏名称</p>
+                </div>
+                <div class="weui-cell__ft" id="railShow"></div>
+              </a>
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>定位告警</p>
+                </div>
+                <div class="weui-cell__ft" id="tnumber"></div>
+              </a>
+              <a class="weui-cell  weui-cell_access" href="javascript:">
+                <div class="weui-cell__bd">
+                  <p>体温告警</p>
+                </div>
+                <div class="weui-cell__ft" id="pnumber"></div>
+              </a>
+              <!--/device/getDeviceInfoByUserId?userId=2-->
+            </div>
+
+            <div class="weui-cells__title">历史数据</div>
+            <div class="weui-cells">
+              <div class="weui-cell  weui-cell_access" id="baidu_echarts"
+                style="width: 100%; height: 480px; background-color: #fff; padding-top: 0; padding-left: 5px;"></div>
+            </div>
+
+            <!--BEGIN 解绑用户-->
+            <div class="js_dialog" id="delLog" style="display: none;">
+              <div class="weui-mask"></div>
+              <div class="weui-dialog">
+                <div class="weui-dialog__hd"><strong class="weui-dialog__title">解绑用户</strong></div>
+                <div class="weui-dialog__bd">是否解绑用户</div>
+                <div class="weui-dialog__ft">
+                  <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                  <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary" id="untieSure">确定</a>
+                </div>
+              </div>
+            </div>
+            <!--END 解绑用户-->
+
+            <!--解绑用户-->
+            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_warn" id="unBind">解绑</a>
+            <!--BEGIN dialog4-->
+            <a href="javascript:history.back();" class="weui-btn weui-btn_mini weui-btn_warn" id="unBack">返回</a>
+            <!--BEGIN dialog4-->
+            <div class="js_dialog" id="uniteBindOk" style="display: none;">
+              <div class="weui-mask"></div>
+              <div class="weui-dialog">
+                <div class="weui-dialog__bd" id="unitieBind_Msg"></div>
+                <div class="weui-dialog__ft">
+                  <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary" id="uniteOk">返回</a>
+                </div>
+              </div>
+            </div>
+            <!--END dialog4-->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 地址点击弹窗 -->
+    <div class="js_dialog" id="addressInfo" style="display: none;">
+      <div class="weui-mask"></div>
+      <div class="weui-dialog" style="font-size: 18px;">
+          
+      </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    $(function(){
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+
+    $(function(){
+      captLogin();
+      $('#uniteOk').on('click', function() {
+        window.location.href = "../../index.html";
+      });
+  /*------------------------ 确认解绑 login--------------------------------*/
+      /*获取 地址栏 参数*/
+      //url为空时为调用当前url地址 
+      //调用方法为 var params = getPatams();
+      var patams = getPatams();
+      //获取地址栏上的imei
+      var unitieObj = {
+        imei: patams.imei
+      };
+      //alert(JSON.stringify(patams));
+      var userId = patams.id;
+      var userIdArr = [userId];
+      //alert("imei=" + patams.imei);
+      $('#untieSure').on('click', function(data){
+        $('#uniteBindOk').css("display", "block");
+      });
+      //返回
+      $('#untie_dialogNo').on('click', function(data){
+        $('#uniteBindOk').css("display", "none");
+      });
+      $('#unBind').on('click', function(){
+        $('#delLog').css("display", "block");
+      });
+      $('#delLog .weui-dialog__btn_default').on('click', function(){
+        $('#delLog').css("display", "none");
+      });
+      $('#delLog .weui-mask').on('click', function(){
+        $('#delLog').css("display", "none");
+      });
+      //解绑
+      $('#untieSure').on('click', function(data){
+        var unitieObj = {
+            "deviceImei": patams.imei
+            };
+            //alert("imei=" + patams.imei);
+            //alert(JSON.stringify(unitieObj));
+        setAjaxA("/user/unBoundDevice", unitieObj, function(data) {
+          //alert(JSON.stringify(data));
+            var unitieMsg = data.msg; //解绑设备
+            var unitieCode = data.code;
+            $('#unitieBind_Msg').text(unitieMsg);
+        }, function(textStatus) {
+            //alert(textStatus);
+            window.location.href = "./empty_page.html";
+        });
+      });
+  /*------------------------ 确认解绑 end--------------------------------*/
+      
+        //个人信息
+        setAjaxNA("/user/getUserById?userId="+parseInt(userId), function(data) {
+            $('.info_bd .info_bd_t').text(data.data.name);
+            let time = data.data.age;
+            let newDate = new Date().getTime();
+            let date = new Date(time).getTime();
+            let oneDay = 365*24*60*60*1000; // 一天的毫秒数
+            let age = parseInt((newDate - date)/oneDay);
+
+            $('#age')[0].innerText = age+"岁";
+            $('#sex')[0].innerText = data.data.sex;
+            $('#tel')[0].innerText = data.data.tel;
+            $('#address')[0].innerText = data.data.address;
+            $('.info_hd img').attr("src", data.data.photo);
+            $('#addressInfo .weui-dialog').html(data.data.address);
+            if(data.data.railName !== null) {
+              $('#railShow').text(data.data.railName);
+            }else {
+              $('#railShow').text('暂无');
+            }
+            //name .info_bd .info_bd_t //在线img .info_bd .info_bd_m span img 在线msg .info_bd .info_bd_m span i //tmp .info_bd .info_bd_m strong
+        }, function(data) {
+            window.location.href = "./empty_page.html";
+        });
+
+        /*在线 温度*/
+        setAjaxA("/device/listDeviceAlarmInfoByUserId", userIdArr, function(data) {
+            var tmp = data.data[0].temperature ? parseFloat(data.data[0].temperature).toFixed(1) : "暂无体温";
+            $('.info_bd .info_bd_m strong').text(tmp);
+
+            var power = parseInt(data.data[0].electric);
+            if(power === 3) {
+              $('.info_bd .info_bd_b img').attr("src", "images/powerHigh.png");
+            }else if(power === 2) {
+              $('.info_bd .info_bd_b img').attr("src", "images/powerBattery.png");
+            }else if(power === 1) {
+              $('.info_bd .info_bd_b img').attr("src", "images/powerLow.png");
+            }else if(power === 0) {
+              $('.info_bd .info_bd_b img').attr("src", "images/powerDown.png");
+            }else {
+              $('.info_bd .info_bd_b img').attr("src", "images/powerNull.png");
+            }
+
+            // if(data.data[0].online) {
+            //     $('.info_bd .info_bd_m span img').attr("src", "images/online.png");
+            //     $('.info_bd .info_bd_m span i').text('在线');
+            //     $('#container .info_bd span').css("color", "#64bf28");
+            //     $('.info_hd img').attr("src", "images/member.png");
+            // }else {
+            //     $('.info_bd .info_bd_m span i').text('不在线');
+            //     $('.info_bd .info_bd_m span img').attr("src", "images/offline.png");
+            //     $('#container .info_bd span').css("color", "#999");
+            //     $('.info_hd img').attr("src", "images/memberN.png");
+            //     $('.info_hd img').css("border", "1px solid #bfbfbf");
+            // }
+        }, function(data) {
+            $('#temperature')[0].innerText = parseFloat(data.data[0].temperature).toFixed(1) || "暂无体温";
+            $('#online')[0].innerText = '不在线';
+            window.location.href = "./empty_page.html";
+        });
+        //地址栏点击事件
+        $("#address").on('click',function(){
+            $("#addressInfo").css("display", "block");
+        })
+        $('.weui-mask').on('click',function () {
+            $('#addressInfo').css("display", "none");
+        });
+        /*告警*/
+        var deviceId = {};
+                        
+        deviceId["userId"] = userId; //id
+        setAjaxA("/alarm/getAlarmByUserId", deviceId, function(data) {
+                //$("#name").innerText = data[0].name;
+                //$("#b_name").innerText = data[0].name; 别名
+                //$("#sex").innerText = data[0].sex;
+                //$("#age").innerText = data[0].age;
+
+                var tnumber, pnumber;
+                if(data.data==null) {
+                  tnumber = 0;
+                }else {
+                  tnumber = data.data.tnumber;
+                  if(tnumber==null) {
+                    tnumber = 0;
+                  }
+                }
+
+                if(data.data==null) {
+                  pnumber = 0;
+                }else {
+                  pnumber = data.data.pnumber;
+                  if(pnumber==null) {
+                    pnumber = 0;
+                  }
+                }
+                $('#tnumber')[0].innerText = tnumber;
+                
+                $('#pnumber')[0].innerText = pnumber;
+            }, function(data) {
+                //alert('error');
+                window.location.href = "./empty_page.html";
+            });
+
+        /* 历史数据温度*/
+        var historyTm = {};
+        var tmp = []; //历史数据数组
+        var tmp_time = []; //时间 数组
+        var newArr_tmp = []; //温度
+        var newArr_time = []; //时间
+        getAjaxNA("/deviceData/listUserLocationById?userId="+parseInt(userId), function(data) {
+              tmp = data.data.list;
+              for(var i=0; i<tmp.length; i++) {
+                newArr_tmp[i] = parseFloat(tmp[i].temperature).toFixed(1);
+                newArr_time[i] = tmp[i].gmtCreate.slice(5);
+              }
+              //echarts 图标
+              // 基于准备好的dom，初始化echarts实例
+              var myChart = echarts.init(document.getElementById('baidu_echarts'));
+              // 指定图表的配置项和数据
+              var option = {
+                  title: {
+                      text: '体温变化',
+                      subtext: '疫情防控'
+                  },
+                  tooltip: {
+                      trigger: 'axis'
+                  },
+                  legend: {
+                      data: ['最高温度', '最低温度'] //定义曲线具体数据
+                  },
+                  toolbox: {
+                      show: true,
+                      feature: {
+                          dataZoom: {
+                              yAxisIndex: 'none'
+                          },
+                          dataView: {
+                            readOnly: true,
+                            optionToContent: function(opt) {
+                                var axisData = opt.xAxis[0].data;
+                                var table = '<table style="width:70%;text-align:left"><tbody><tr>'
+                                  + '<td>时间</td>'
+                                  + '<td>温度</td>'
+                                  //+ '<td>' + series[1].name + '</td>'
+                                  + '</tr>';
+                                for(var i=newArr_time.length-1, len=newArr_time.length; i>=0; i--) {
+                                  if(newArr_tmp[i]>=37.3) {
+                                    table += '<tr style="color: red;">';
+                                  }else {
+                                    table += '<tr">';
+                                  }
+                                  table += '<td>' + newArr_time[i] + '</td>'
+                                    + '<td>' + newArr_tmp[i] + '</td>'
+                                    //+ '<td>' + series[1].data[i] + '</td>'
+                                    + '</tr>';
+                                }
+                                table += '</tbody></table>';
+                                return table;
+                            },
+                            contentToOption: function(opts) {
+                              //this.optionToContent();
+                            }
+                          },
+                          //magicType: {type: ['line', 'bar']}, // 柱状图
+                          /*restore: {},
+                          saveAsImage: {}*/
+                      }
+                  },
+                  xAxis: {
+                      type: 'category',
+                      boundaryGap: false,
+                      data: newArr_time,
+                      axisLabel: {
+                        rotate: 285
+                      }
+                  },
+                  grid: {
+                    bottom: "28%"
+                  },
+                  yAxis: {
+                      type: 'value',
+                      axisLabel: {
+                          formatter: '{value}°C' //Y坐标
+                      }
+                  },
+                  dataZoom: [{
+                          type: 'inside',
+                          start: 0,
+                          end: 100
+                      }, {
+                          start: 0,
+                          end: 10,
+                          handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                          handleSize: '80%',
+                          handleStyle: {
+                              color: '#fff',
+                              shadowBlur: 3,
+                              shadowColor: 'rgba(0, 0, 0, 0.6)',
+                              shadowOffsetX: 2,
+                              shadowOffsetY: 2
+                          }
+                      }],
+                  visualMap: {
+                      show: false,
+                      dimension: 1,
+                      pieces: [
+                      {
+                        gte: 37.3, 
+                        lte: 40, 
+                        color: 'rgb(194, 53, 49)'
+                      }],  //pieces的值由动态数据决定
+                      outOfRange: {
+                          color: 'green'
+                      }
+                  },
+                  series: [
+                      {
+                          name: '',
+                          type: 'line',
+                          data: newArr_tmp,
+                          markPoint: {
+                              data: [
+                                  {type: 'max', name: '最大值'},
+                                  {type: 'min', name: '最小值'}
+                              ]
+                          },
+                          markLine: {
+                              data: [
+                                  //{type: 'average', name: '平均值'}设置标线类型
+                                  {yAxis: 37.3}//设置标线
+                              ]
+                          }
+                      }
+                  ]
+              };
+              // 使用刚指定的配置项和数据显示图表。
+              myChart.setOption(option);
+          }, function(data) {
+              //alert('error');
+              window.location.href = "./empty_page.html";
+          });
+    });
+</script>
+    <style scoped>
+      .weui-tabbar__item .weui-tabbar__label {
+        color: #929292;
+      }
+
+      .weui-bar__item_on {
+        color: #4377ff;
+      }
+
+      .page {}
+
+      /*---------------------tabbar------------------------*/
+      .weui-tabbar {
+        background-color: #fff;
+      }
+
+      /*---------------------grid------------------------*/
+      .weui-grids .weui-grid {
+        background-color: #fff;
+      }
+
+      .BMap_cpyCtrl {
+        display: none;
+      }
+
+      .weui-cell_access .weui-cell__ft:after {
+        content: "";
+        border-style: none;
+        right: -10px;
+      }
+
+      .weui-cell_access .weui-cell__ft {
+        padding-right: -5px;
+      }
+
+      .weui-cells__title {
+        font-size: 18px;
+        margin-top: .3em;
+      }
+
+      #baidu_echarts canvas {
+        top: 1px !important;
+      }
+
+      /*---------------------info login------------------------*/
+      #container .info_hd {
+        float: left;
+        margin-right: 12px;
+      }
+
+      #container .info_bd {
+        float: left;
+      }
+
+      #container .info_bd .info_bd_t {
+        font-size: 21px;
+        margin-top: 4px;
+        margin-bottom: 5px;
+      }
+
+      #container .info_bd .info_bd_m img {
+        width: 17px;
+        vertical-align: middle;
+        margin-right: 2px;
+      }
+
+      #container .info_bd .info_bd_m {
+        font-size: 17px;
+        font-style: normal;
+      }
+
+      #container .info_bd span,
+      #container .info_bd strong {
+        font-size: 17px;
+      }
+
+      #container .info_bd strong {
+        color: #5090f1;
+      }
+
+      #container .info_bd span {
+        color: #999;
+        margin-right: 5px;
+      }
+
+      #container .info_bd span i {
+        font-style: normal;
+      }
+
+      /*---------------------info login------------------------*/
+
+      /*---------------------unBind unBack login------------------------*/
+      #unBind,
+      #unBack {
+        width: 50%;
+        height: 40px;
+        line-height: 40px;
+        padding: 0;
+        font-size: 20px;
+        letter-spacing: 2px;
+        transform: translateX(-50%);
+        margin-left: 50%;
+        margin-top: 5px;
+      }
+
+      #unBind {
+        margin-top: 10px;
+      }
+
+      #unBack {
+        margin-top: 5px;
+      }
+
+      /*---------------------unBind unBack end------------------------*/
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

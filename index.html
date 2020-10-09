@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>如泰社区疫情防控助手</title>
+    <link rel="stylesheet" href="./css/weui.css"/>
+    <link rel="stylesheet" href="./example.css"/>
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script type="text/javascript" src="js/bMpLib.js"></script>
+    <script type="text/javascript" src="js/store.min.js"></script>
+    <script src="ajaxMy.js"></script>
+    <script src="common.js"></script>
+</head>
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+
+    <div class="container" id="container"></div>
+
+    <script type="text/html" id="tpl_home">
+<div class="page__bd" id="load_hd" style="height: 100%;">
+
+    <!-- <div id="loading">
+        <div class="weui-loadmore">
+            <i class="weui-loading"></i>
+            <span class="weui-loadmore__tips">正在加载</span>
+        </div>
+    </div> -->
+    <div class="weui-tab">
+        <div class="weui-tab__panel" id="operat">
+            <!--manipulate-->
+            <div class="weui-cells__title" style="display: none;">管理</div>
+            <div class="weui-cells" id="manage_cells">
+                <a class="weui-cell  weui-cell_access weui-cell_example" href="javascript:" id="search">
+                    <div class="weui-cell__hd"><img class="imgCfg" src="images/sousuo1.png" alt=""></div>
+                    <div class="weui-cell__bd">
+                        <p>搜索</p>
+                    </div>
+                    <div class="weui-cell__ft" id="scanIt">
+                        <img class="imgCfg" style="margin-right: 0;" src="images/scan.png" alt="">
+                    </div>
+                </a>
+                <a href="./html/home/history_alarm.html" id="grandTotal">
+                    <h1 style="color: #222; font-weight: 500; font-size: 18px; margin-left: 15px; margin-top: 20px;">
+                        警告统计
+                        <span style="color: #cfcfcf; font-size: 12px; text-align: center; display: inline-block;">
+                            更新时间 <i style="color: #cfcfcf; font-size: 12px; font-style: normal;"></i>
+                        </span>
+                        <span class="weui-cee_ft"><img src="./images/right.png" alt=""></span>
+                    </h1>
+
+                    <table>
+                        <tr>
+                            <td style="color: #bf4739; font-size: 21px;">0</td>
+                            <td style="color: #cd6212; font-size: 21px;">0</td>
+                            <td style="color: #153147; font-size: 21px;">0</td>
+                            <td style="color: #35cbbf; font-size: 21px;">0</td>
+                        </tr>
+                        <tr style="height: 30px; font-weight: 700; color: #2d2d2d; font-size: 13px;">
+                            <td class="tdBgc">累计告警</td>
+                            <td class="tdBgc">累计人数</td>
+                            <td class="tdBgc">温度告警</td>
+                            <td class="tdBgc">位置告警</td>
+                        </tr>
+                        <tr style="font-weight: 700; height: 35px;">
+                            <td style="color: #b2b2b2; font-size: 13px;"><span>新增</span><span
+                                    style="color: #bf4739;">+0</span></td>
+                            <td style="color: #b2b2b2; font-size: 13px;"><span>新增</span><span
+                                    style="color: #cd6212;">+0</span></td>
+                            <td style="color: #b2b2b2; font-size: 13px;"><span>新增</span><span
+                                    style="color: #153147;">+0</span></td>
+                            <td style="color: #b2b2b2; font-size: 13px;"><span>新增</span><span
+                                    style="color: #35cbbf;">+0</span></td>
+                        </tr>
+                    </table>
+                    <div id="userHistory">
+                        <div>
+                            <span>记录</span>
+                        </div>
+                        <img src="./images/right.png" alt="">
+                    </div>
+                </a>
+            </div>
+
+            <div id="addOrdel">
+
+            </div>
+
+            <!--enter-->
+            <div class="weui-cells__title" id="topDepartment">
+                <div style="display: inline-block;width:160px;">
+                    <span></span>
+                </div>
+                <!-- <a href="javascript:;" id="manage"><img class="sImg" src="images/manage.png" alt=""></a> -->
+                <div id="topCount"></div>
+                <i></i>
+            </div>
+            <div class="weui-cells" id="memberSum">
+                <!--普通成员-->
+
+                <!--部门-->
+            </div>
+            <div class="js_dialog" id="errorQrcode" style="display: none;">
+                <div class="weui-mask"></div>
+                <div class="weui-dialog">
+                    <div class="weui-dialog__bd">请扫描正确二维码</div>
+                    <div class="weui-dialog__ft">
+                        <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary" id="codeBack">返回</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="searchName">
+                <div class="weui-search-bar" id="searchBar">
+                    <form class="weui-search-bar__form">
+                        <div class="weui-search-bar__box">
+                            <i class="weui-icon-search"></i>
+                            <input type="search" class="weui-search-bar__input" id="searchInput" placeholder="搜索"
+                                required />
+                            <a href="javascript:" class="weui-icon-clear" id="searchClear"></a>
+                        </div>
+                        <label class="weui-search-bar__label" id="searchText">
+                            <i class="weui-icon-search"></i>
+                            <span>搜索</span>
+                        </label>
+                    </form>
+                    <a href="javascript:" class="weui-search-bar__cancel-btn" id="searchCancel">取消</a>
+                </div>
+                <div class="weui-cells searchbar-result" id="searchResult">
+                    <!--search-->
+                </div>
+            </div>
+            <div id="mask"></div>
+
+            <div class="js_dialog" id="userArr" style="display: none;">
+                <div class="weui-mask"></div>
+                <div class="weui-dialog">
+                    <div class="weui-dialog__bd"></div>
+                    <div class="weui-dialog__ft">
+                        <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" id="userBack">知道了</a>
+                    </div>
+                </div>
+            </div>
+            <!--BEGIN toast-->
+            <div id="toast" style="display: none;">
+                <div class="my-toast">
+                    <p class="weui-toast__content">已完成</p>
+                </div>
+            </div>
+            <!--end toast-->
+        </div>
+        <div class="weui-tabbar" id="tabbar_my">
+            <a href="javascript:" id="index" class="weui-tabbar__item weui-bar__item_on">
+                <img src="./images/home_on.png" alt="" class="weui-tabbar__icon">
+                <p class="weui-tabbar__label">首页</p>
+            </a>
+            <a href="javascript:" id="map" class="weui-tabbar__item">
+                <img src="./images/map.png" alt="" class="weui-tabbar__icon">
+                <p class="weui-tabbar__label">地图</p>
+            </a>
+            <a href="javascript:" id="setting" class="weui-tabbar__item">
+                <img src="./images/setting.png" alt="" class="weui-tabbar__icon">
+                <p class="weui-tabbar__label">设置</p>
+            </a>
+        </div>
+    </div>
+    <!--BEGIN 部门告警人数详情-->
+    <div class="js_dialog" id="deptAlarm" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog">
+            <div class="weui-dialog__hd"><strong class="weui-dialog__title">部门告警人数详情</strong></div>
+            <div class="weui-dialog__bd_alarm">
+                <img src="images/tmpError.png" alt="" class="ftIcon"/>温度告警人数 <strong>:</strong>
+                <span id="absTNum"></span>
+            </div>
+            <div class="weui-dialog__bd_alarm">
+                <img src="images/mapError.png" alt="" class="ftIcon"/>位置告警人数 <strong>:</strong>
+                <span id="absPNum"></span>
+            </div>
+            <div class="weui-dialog__bd_alarm">
+                <img src="images/deviceError.png" alt="" class="ftIcon"/>离线告警人数 <strong>:</strong>
+                <span id="absDNum"></span>
+            </div>
+            <div class="weui-dialog__ft">
+                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">关闭</a>
+            </div>
+        </div>
+    </div>
+    <!--END 部门告警人数详情-->
+</div>
+
+<script type="text/javascript">
+    /**/
+   
+    $(function () {
+        captLogin();
+        //首页
+        $('#index').on('click', function () {
+            window.location.href = "/index.html";
+        });
+        //地图
+        $('#map').on('click', function () {
+            window.location.href = "/html/map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function () {
+            window.location.href = "/html/setting/setting.html";
+        });
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function () {
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function () {
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if (!innerH) {
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if ($parent.hasClass('js_show')) {
+                $parent.removeClass('js_show');
+            } else {
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if (this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH) {
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if (scrollTop > this.offsetTop) {
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if ($foot.length < 1) return;
+
+            if ($foot.position().top + $foot.height() < winH) {
+                $foot.addClass('j_bottom');
+            } else {
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+    $(function () {
+        //扫描正确二维码
+        $("#codeBack").on('click', function () {
+            $('#errorQrcode').css("display", "none");
+        });
+
+        setTimeout(function () {
+            $('#loading').css("display", "none");
+        }, 500);
+        
+
+        /*----------------获取企业微信jssdkConfig login--------------------------*/
+        getJSSDK();
+        /*----------------获取企业微信jssdkConfig end--------------------------*/
+        
+        /*-----------------------------------------------------------分组 login---------------------------------------------------------------------*/
+
+        var topCorpId = null;//顶级部门Id 
+        getAjaxN('/dept/getMaxDepartmentId', function(data){
+            if(data.code === 0) {
+                topCorpId = data.data;//获取当前公司顶级部门Id
+            }
+        }, function(){});
+
+        var departmentArr = [];//树形结构
+        var dept = [];//遍历树形结构后的
+        var notGrouped = [];//未分组用户
+        var memberSum = $('#memberSum'),
+            hrefArr = [];//面包屑数组
+        var difference = 600000;//判断设备是否在线时间，毫秒
+        var total = 0;//当前企业总人数
+
+        var code = 0;//获取未分组用户方法状态码
+        getNotGrouped();//获取未分组用户方法
+
+        //获取设备上传频率
+        getAjaxN("/upload/select",function (data) {
+            var dayTime = data.data.dayTime,
+                nightTime = data.data.nightTime,
+                dayInterval = data.data.dayInterval,
+                nightInterval = data.data.nightInterval;
+            var newDate = new Date();
+            var hours = newDate.getHours();
+            if (hours >= dayTime && hours < nightTime) {
+                difference = dayInterval * 60 * 1000 * 2;
+                // console.log(hours,dayInterval);
+            }else{
+                difference = nightInterval * 60 * 1000 * 2;
+            }
+        })
+        //获取当前企业总人数
+        getAjaxN("/user/getUserTotal",function (data) {
+            total = data.data;
+        })
+
+        //获取部门信息
+        getAjaxN('/dept/listAllDepartment',function(data) {
+            var dept = data.data.list;
+            var noGroup = {id:-1,name:"未分组成员",pid:topCorpId,displayOrder:10000,children:[]};
+            dept.push(noGroup);
+            departmentArr.push(getTreeN(dept,topCorpId));
+        },function(){});
+        //递归生成树型结构,写两个方法是为了把自己本身加进去
+        function getTreeN(treeData,id) {
+            for(var i=0;i<treeData.length;i++){ 
+                var node=treeData[i];
+                if(node.id==id ){
+                    var newNode={id:node.id,pid:node.pid,name:node.name,displayOrder:node.displayOrder,children:getTree(treeData,node.id),users:{}};
+                    return newNode;             
+                }
+            }
+        }
+        function getTree(treeData,parentId){
+            var treeArr=[];
+            for(var i=0;i<treeData.length;i++){ 
+                var node=treeData[i];
+                if(node.pid==parentId ){
+                    var newNode={id:node.id,pid:node.pid,name:node.name,displayOrder:node.displayOrder,children:getTree(treeData,node.id),users:{}};
+                    treeArr.push(newNode);              
+                }
+            }
+            return treeArr;
+        }
+        
+        //获取用户信息
+        getAjaxN('/deviceData/listDepartmentUserData',function(data){
+            var users = data.data;
+            dept = readNodes(departmentArr);
+            dept.forEach(element => {
+                element.users=users[element.id];
+            });
+            if (notGrouped.length>0) {
+                dept[dept.length-1].users=notGrouped;
+            } 
+        },function(){});
+
+        //初始加载
+        departmentArr.forEach((element, index) => {
+            var children = element.children;
+            var users = element.users;
+            //面包屑
+            var id = element.id;
+            var mName = element.name;
+            var obj = {
+                id:id,
+                mName:mName
+            };
+            hrefArr.push(obj);
+            var nameStr = '';
+            //判断面包屑的长度
+            if(hrefArr.length>3){
+                var i=hrefArr.length-3;
+            }else{
+                var i=0;
+            }
+            for(; i<hrefArr.length; i++) {
+                nameStr += `<a href="javascript:;" class="aBline"  hrefIndex="`+i+`" id="`+hrefArr[i].id+`" mName="`+hrefArr[i].mName+`" >`+(hrefArr[i].mName.length>4?hrefArr[i].mName.substring(0,3)+"…":hrefArr[i].mName)+`</a>`;
+                if(i!=hrefArr.length-1) {
+                    nameStr += `<img src="images/right.png" alt="" style="margin-left: 0; width: 10px;display: inline-block;" />`; 
+                }
+            }
+            //初始加载把未分组用户加入
+            var usersAll = getUsers(hrefArr[hrefArr.length-1].id);
+            // usersAll = usersAll.concat(notGrouped);
+            statisticsHead(hrefArr[hrefArr.length-1].id,usersAll);//面包屑统计告警人数方法
+            $('#topDepartment span').html(nameStr);
+
+
+            children.forEach(element => {
+                var str = `
+                    <a class="weui-cell  weui-cell_access weui-cell_example memberChild" href="javascript:" id="`+ element.id + `" pId="` + element.pid + `" mName="` + element.name + `" order="` + element.displayOrder + `">
+                        <div class="weui-cell__hd"><img class="imgCfg" src="images/depart.png" alt=""></div>
+                        <div class="weui-cell__bd">
+                            <p style="width: 117px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">`+ element.name + `</p>
+
+                        </div>
+                    </a>
+                    `;
+                appendNode(memberSum,str);
+                var users = getUsers(element.id);//得到部门所有用户方法
+                statistics(element.id,users);//部门统计告警人数方法
+            });
+            if (users!=null&&users.length!=0) {
+                users.forEach(element => {
+                    var tmp = parseFloat(element.temperature),
+                        lng = element.longitude,
+                        lat = element.latitude,
+                        str = `
+                    <a class="weui-cell  weui-cell_access weui-cell_example userLink" href="javascript:" userId="`+ element.userId +`" lat="`+lat+`" lng="`+lng+`">
+                        <div class="weui-cell__hd">`;
+                    var nT = new Date().getTime(),
+                        gT = new Date(element.gmtCreate).getTime(),
+                        dT = nT - gT;
+                    if(dT>difference) {
+                        str+=`<img class="imgCfg" src="images/memberN.png" alt="">`;
+                    }else {
+                        str+=`<img class="imgCfg" src="images/member.png" alt="">`;
+                    }
+
+                    str += `</div>
+                        <div class="weui-cell__bd">
+                            <p style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">`+ element.name +`</p>
+                            <p style="font-size: 12px; color: #929292;">`+ element.tel +`</p>
+                        </div>
+                        <div class="weui-cell__ft" style="width: 35%;">    
+                        `;  
+                    if(tmp === null||tmp === undefined){
+                        tmp = 0;
+                    }    
+                    if(tmp>=37.3) {
+                        str += `
+                            <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                            `;
+                    }
+
+                    if(dT>difference) {
+                        str += `
+                            <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                        `;
+                    }
+                    
+                    var mLng = parseFloat(element.railLongitude),
+                        mLat = parseFloat(element.railLatitude);
+                    var point = new BMap.Point(lng,lat),
+                        mPoint = new BMap.Point(mLng,mLat);
+                    var circle = new BMap.Circle(mPoint, element.radius, {fillColor:"blue", strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});
+                    var whtinScope = true;
+                    if(BMapLib.GeoUtils.isPointInCircle(point,circle)){
+                        //console.log("该point在circle内");
+                    }else {
+                        whtinScope = false;
+                    }
+                    if(whtinScope === false) {
+                        str += `
+                            <img src="images/mapError.png" alt="" class="ftIcon"/>
+                            `;
+                    }
+                    str += `
+                            </div>
+                        </a>    
+                        `;
+                    appendNode(memberSum,str);
+                });
+            }
+        });
+        
+        //遍历树形结构
+        function readNodes (nodes = [], arr = []) {
+            for (let item of nodes) {
+                arr.push(item)
+                if (item.children && item.children.length) readNodes(item.children, arr)
+            }
+            return arr
+        }
+        //部门点击事件,zepto 阻止事件冒泡父级元素选中需要使用$(document)
+        $(document).on('click', '.memberChild', function () {
+            // console.log(dept);
+            var id = $(this).attr("id");
+            var mName = $(this).attr("mName");
+            var obj = {
+                id:id,
+                mName:mName
+            };
+            hrefArr.push(obj);
+            var nameStr = '';
+            //判断面包屑的长度
+            if(hrefArr.length>3){
+                var i=hrefArr.length-3;
+            }else{
+                var i=0;
+            }
+            for(; i<hrefArr.length; i++) {
+                nameStr += `<a href="javascript:;" class="aBline"  hrefIndex="`+i+`" id="`+hrefArr[i].id+`" mName="`+hrefArr[i].mName+`" >`+(hrefArr[i].mName.length>4?hrefArr[i].mName.substring(0,3)+"…":hrefArr[i].mName)+`</a>`;
+                if(i!=hrefArr.length-1) {
+                    nameStr += `<img src="images/right.png" alt="" style="margin-left: 0; width: 10px;display: inline-block;" />`; 
+                }
+            }
+            var usersAll = getUsers(hrefArr[hrefArr.length-1].id);
+            statisticsHead(hrefArr[hrefArr.length-1].id,usersAll);//面包屑统计告警方法
+            $('#topDepartment span').html(nameStr);//渲染面包屑
+
+            dept.forEach(element => {
+                if (id == element.id) {
+                    var children = element.children;
+                    var users = element.users;
+                    memberSum.html("");//清空分组元素
+                    $('#memberMask').remove();//清空无成员显示
+                    if(children.length==0&&users==null){
+                        NoUsers(id);//无成员显示方法
+                    }
+                    children.forEach(element => {
+                        var str = `
+                            <a class="weui-cell  weui-cell_access weui-cell_example memberChild" href="javascript:" id="`+ element.id + `" pId="` + element.pid + `" mName="` + element.name + `" order="` + element.displayOrder + `">
+                                <div class="weui-cell__hd"><img class="imgCfg" src="images/depart.png" alt=""></div>
+                                <div class="weui-cell__bd">
+                                    <p style="width: 117px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">`+ element.name + `</p>
+
+                                </div>
+                            </a>
+                            `;
+                        appendNode(memberSum,str);
+                        var users = getUsers(element.id);//获取部门所有人数方法
+                        statistics(element.id,users);//部门拥挤告警方法
+                    });
+                    if (users!=null&&users.length!=0) {
+                        users.forEach(element => {
+                            var tmp = parseFloat(element.temperature),
+                                lng = element.longitude,
+                                lat = element.latitude,
+                                str = `
+                            <a class="weui-cell  weui-cell_access weui-cell_example userLink" href="javascript:" userId="`+ element.userId +`" lat="`+lat+`" lng="`+lng+`">
+                                <div class="weui-cell__hd">`;
+                            var nT = new Date().getTime(),
+                                gT = new Date(element.gmtCreate).getTime(),
+                                dT = nT - gT;
+                            if(dT>difference) {
+                                str+=`<img class="imgCfg" src="images/memberN.png" alt="">`;
+                            }else {
+                                str+=`<img class="imgCfg" src="images/member.png" alt="">`;
+                            }
+
+                            str += `</div>
+                                <div class="weui-cell__bd">
+                                    <p style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">`+ element.name +`</p>
+                                    <p style="font-size: 12px; color: #929292;">`+ element.tel +`</p>
+                                </div>
+                                <div class="weui-cell__ft" style="width: 35%;">    
+                                `;  
+                            if(tmp === null||tmp === undefined){
+                                tmp = 0;
+                            }    
+                            if(tmp>=37.3) {
+                                str += `
+                                    <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+
+                            if(dT>difference) {
+                                str += `
+                                    <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                                `;
+                            }
+                            
+                            var mLng = parseFloat(element.railLongitude),
+                                mLat = parseFloat(element.railLatitude);
+                            var point = new BMap.Point(lng,lat),
+                                mPoint = new BMap.Point(mLng,mLat);
+                            var circle = new BMap.Circle(mPoint, element.radius, {fillColor:"blue", strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});
+                            var whtinScope = true;
+                            if(BMapLib.GeoUtils.isPointInCircle(point,circle)){
+                                //console.log("该point在circle内");
+                            }else {
+                                whtinScope = false;
+                            }
+                            if(whtinScope === false) {
+                                str += `
+                                    <img src="images/mapError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+                            str += `
+                                    </div>
+                                </a>    
+                                `;
+                            appendNode(memberSum,str);
+                        });
+                    } 
+                }
+            });
+        }); 
+        //面包屑点击事件
+        $('#topDepartment span').on('click', '.aBline', function () {
+            var id = $(this).attr("id");
+            var hrefIndex = parseInt($(this).attr("hrefIndex"));//获取面包屑下标
+            hrefArr = hrefArr.slice(0,hrefIndex+1);//移除点击面包屑之后的面包屑
+            // console.log( hrefIndex);
+            $('#topDepartment span').html('');//情况面包屑
+            var nameStr = '';
+            //判断面包屑的长度
+            if(hrefArr.length>3){
+                var i=hrefArr.length-3;
+            }else{
+                var i=0;
+            }
+            for(; i<hrefArr.length; i++) {
+                nameStr += `<a href="javascript:;" class="aBline"  hrefIndex="`+i+`" id="`+hrefArr[i].id+`" mName="`+hrefArr[i].mName+`" >`+(hrefArr[i].mName.length>4?hrefArr[i].mName.substring(0,3)+"…":hrefArr[i].mName)+`</a>`;
+                if(i!=hrefArr.length-1) {
+                    nameStr += `<img src="images/right.png" alt="" style="margin-left: 0; width: 10px;display: inline-block;" />`; 
+                }
+            }
+            var usersAll = getUsers(hrefArr[hrefArr.length-1].id);//获取当前点击部门的所有用户
+
+            // if(id == topCorpId){
+            //     usersAll = usersAll.concat(notGrouped);//如果当前点击部门为顶级部门则加入未分组用户
+            // }
+            statisticsHead(hrefArr[hrefArr.length-1].id,usersAll);//面包屑统计告警方法
+            $('#topDepartment span').html(nameStr);//渲染面包屑
+            
+            dept.forEach(element => {
+                if(id == element.id){
+                    var children = element.children;
+                    var users = element.users;
+                    memberSum.html("");//情况分组元素
+                    $('#memberMask').remove();//清空无成员显示
+                    if(children.length==0&&users==null){
+                        NoUsers(id);//无成员显示方法
+                    }
+                    children.forEach(element => {
+                        var str = `
+                            <a class="weui-cell  weui-cell_access weui-cell_example memberChild" href="javascript:" id="`+ element.id + `" pId="` + element.pid + `" mName="` + element.name + `" order="` + element.displayOrder + `">
+                                <div class="weui-cell__hd"><img class="imgCfg" src="images/depart.png" alt=""></div>
+                                <div class="weui-cell__bd">
+                                    <p style="width: 117px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">`+ element.name + `</p>
+
+                                </div>
+                            </a>
+                            `;
+                        appendNode(memberSum,str);
+                        var users = getUsers(element.id);//获取部门所有用户方法
+                        statistics(element.id,users);//部门统计告警方法
+                    });
+                    //当前面包屑点击部门为顶级部门是加入未分组用户
+                    // if(id == topCorpId){
+                    //     if(users == null){
+                    //         users = notGrouped;
+                    //     }else{
+                    //         users = users.concat(notGrouped);
+                    //     }
+                    // }
+                    if (users!=null&&users.length!=0) {
+                        users.forEach(element => {
+                            var tmp = parseFloat(element.temperature),
+                                lng = element.longitude,
+                                lat = element.latitude,
+                                str = `
+                            <a class="weui-cell  weui-cell_access weui-cell_example userLink" href="javascript:" userId="`+ element.userId +`" lat="`+lat+`" lng="`+lng+`">
+                                <div class="weui-cell__hd">`;
+                            var nT = new Date().getTime(),
+                                gT = new Date(element.gmtCreate).getTime(),
+                                dT = nT - gT;
+                            if(dT>difference) {
+                                str+=`<img class="imgCfg" src="images/memberN.png" alt="">`;
+                            }else {
+                                str+=`<img class="imgCfg" src="images/member.png" alt="">`;
+                            }
+
+                            str += `</div>
+                                <div class="weui-cell__bd">
+                                    <p style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">`+ element.name +`</p>
+                                    <p style="font-size: 12px; color: #929292;">`+ element.tel +`</p>
+                                </div>
+                                <div class="weui-cell__ft" style="width: 35%;">    
+                                `;  
+                            if(tmp === null||tmp === undefined){
+                                tmp = 0;
+                            }    
+                            if(tmp>=37.3) {
+                                str += `
+                                    <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+
+                            if(dT>difference) {
+                                str += `
+                                    <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                                `;
+                            }
+                            
+                            var mLng = parseFloat(element.railLongitude),
+                                mLat = parseFloat(element.railLatitude);
+                            var point = new BMap.Point(lng,lat),
+                                mPoint = new BMap.Point(mLng,mLat);
+                            var circle = new BMap.Circle(mPoint, element.radius, {fillColor:"blue", strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});
+                            var whtinScope = true;
+                            if(BMapLib.GeoUtils.isPointInCircle(point,circle)){
+                                //console.log("该point在circle内");
+                            }else {
+                                whtinScope = false;
+                            }
+                            if(whtinScope === false) {
+                                str += `
+                                    <img src="images/mapError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+                            str += `
+                                    </div>
+                                </a>    
+                                `;
+                            appendNode(memberSum,str);
+                        });
+                    }
+                }
+            });
+        });
+        //成员点击事件
+        memberSum.on('click', '.userLink', function () {
+            var userId = $(this).attr("userId"),
+                lng = $(this).attr("lng"),
+                lat = $(this).attr("lat");
+            window.location.href = "./html/map/show.html?userId=" + userId + "&lng=" + lng + "&lat=" + lat;
+        });
+        //通过部门Id查询部门所有成员方法
+        function getUsers(id,users=[]) {
+            dept.forEach(element => {
+                if(element.id == id){
+                    if(element.users && element.users.length){
+                        element.users.forEach(element => {
+                            users.push(element);
+                        });
+                    }
+                    if (element.children && element.children.length){
+                        element.children.forEach(element => {
+                            getUsers(element.id,users);
+                        });
+                    }
+                }
+            });
+            return users;
+        }
+        //统计告警人数方法
+        function statistics(id,users) {
+            var absT = 0,
+                absP = 0,
+                absD = 0;
+            if (users!=null&&users.length!=0) {
+                users.forEach(element => {
+                    var tmp = parseFloat(element.temperature);
+                    if (tmp >= 37.3) {
+                        absT++;
+                    }
+
+                    var lng = parseFloat(element.longitude),
+                        lat = parseFloat(element.latitude),
+                        mLng = parseFloat(element.railLongitude),
+                        mLat = parseFloat(element.railLatitude);
+                    var point = new BMap.Point(lng, lat),
+                        mPoint = new BMap.Point(mLng, mLat);
+                    var circle = new BMap.Circle(mPoint, element.radius, { fillColor: "blue", strokeWeight: 1, fillOpacity: 0.3, strokeOpacity: 0.3 });
+                    var whtinScope = true;
+                    if (BMapLib.GeoUtils.isPointInCircle(point, circle)) {
+                    } else {
+                        whtinScope = false;
+                        absP++;
+                    }
+
+                    var nT = new Date().getTime(),
+                        gT = new Date(element.gmtCreate).getTime(),
+                        dT = nT - gT;
+                    if (dT > difference) {
+                        absD++;
+                    }  
+                });
+                var parent = $("#" + id);
+
+                var str = '<div class="weui-cell__ft alarm" style="width:60px; word-break: break-all; color: #cd6212;" absT="'+absT+'" absP="'+absP+'" absd="'+absD+'" >';
+                if (absT !== 0) {
+                    str += '<img src="images/tmpError.png" alt="" class="ftIcon"/>';
+                }
+                if (absP !== 0) {
+                    str += '<img src="images/mapError.png" alt="" class="ftIcon"/>';
+                }
+                if (absD !== 0) {
+                    str += '<img src="images/deviceError.png" alt="" class="ftIcon"/>';
+                }
+                str += '</div>';
+                var childNode = $(str);
+                appendNode(parent, childNode);
+                var countStr = `<span style="color: #5090f1; margin-left: 5px; font-size: 12px;">共` + users.length + `人</span>`;
+                appendNode(parent, countStr);
+            }
+            
+        }
+        $('#deptAlarm .weui-dialog__btn_default').on('click', function(){
+            $('#deptAlarm').css("display", "none");
+        });
+        $('.weui-mask').on('click',function () {
+            $('#deptAlarm').css("display", "none");
+        });
+        //部门后面的告警图标点击事件
+        memberSum.on('click', '.alarm', function () {
+            var absT = $(this).attr("absT");
+            var absP = $(this).attr("absP");
+            var absD = $(this).attr("absD");
+            // console.log("absT="+absT+",absP="+absP+",absD="+absD);
+            $('#absTNum').text(absT+"人");
+            $('#absPNum').text(absP+"人");
+            $('#absDNum').text(absD+"人");
+            $('#deptAlarm').css("display", "block");
+            //阻止事件冒泡
+            event.stopPropagation();
+        });
+        //面包屑后面的告警图标点击事件，需要使用$(window)才生效，所以写了两个函数
+        $(window).on('click', '.alarmM', function () {
+            var absT = $(this).attr("absT");
+            var absP = $(this).attr("absP");
+            var absD = $(this).attr("absD");
+            // console.log("absT="+absT+",absP="+absP+",absD="+absD);
+            $('#absTNum').text(absT+"人");
+            $('#absPNum').text(absP+"人");
+            $('#absDNum').text(absD+"人");
+            $('#deptAlarm').css("display", "block");
+        });
+        
+        //面包屑统计人数方法
+        function statisticsHead(id,users) {
+            $("#topCount").html('');
+            $('#topDepartment i').html('');
+            var absT = 0,
+                absP = 0,
+                absD = 0;
+            if (users!=null&&users.length!=0) {
+                users.forEach(element => {
+                    var tmp = parseFloat(element.temperature);
+                    if (tmp >= 37.3) {
+                        absT++;
+                    }
+
+                    var lng = parseFloat(element.longitude),
+                        lat = parseFloat(element.latitude),
+                        mLng = parseFloat(element.railLongitude),
+                        mLat = parseFloat(element.railLatitude);
+                    var point = new BMap.Point(lng, lat),
+                        mPoint = new BMap.Point(mLng, mLat);
+                    var circle = new BMap.Circle(mPoint, element.radius, { fillColor: "blue", strokeWeight: 1, fillOpacity: 0.3, strokeOpacity: 0.3 });
+                    var whtinScope = true;
+                    if (BMapLib.GeoUtils.isPointInCircle(point, circle)) {
+                    } else {
+                        whtinScope = false;
+                        absP++;
+                    }
+
+                    var nT = new Date().getTime(),
+                        gT = new Date(element.gmtCreate).getTime(),
+                        dT = nT - gT;
+                    if (dT > difference) {
+                        absD++;
+                    }  
+                });
+                var parent = $("#topCount");
+                var str = '<div class="weui-cell__ft alarmM" style="width: 60px;word-break: break-all;color: #cd6212;right: 90px;top: 4px;position: absolute;" absT="'+absT+'" absP="'+absP+'" absd="'+absD+'">';
+                    if (absT !== 0) {
+                    str += '<img src="images/tmpError.png" alt="" class="ftIcon"/>';
+                }
+                if (absP !== 0) {
+                    str += '<img src="images/mapError.png" alt="" class="ftIcon"/>';
+                }
+                if (absD !== 0) {
+                    str += '<img src="images/deviceError.png" alt="" class="ftIcon"/>';
+                }
+                str += '</div>';
+                var childNode = $(str);
+                appendNode(parent, childNode);
+                if (id == topCorpId) {
+                    $('#topDepartment i').text("共" + total + "人");
+                }else{
+                    $('#topDepartment i').text("共" + users.length + "人");
+                }                
+            }
+            
+        }
+
+        //无成员显示方法
+        function NoUsers(id) {
+            //未分组无成员处理
+            if(id=="-1"){
+                if (code == 10004) {
+                    var str = `
+                        <div id="memberMask">
+                            <img src="./html/home/images/no.png" alt="" />
+                            <p>暂无权限查看</p>
+                        </div>
+                        `;
+                    appendNode($('#operat'), str);
+                    return;
+                }
+                if (notGrouped.length==0) {
+                    var str = `
+                        <div id="memberMask">
+                            <img src="./html/home/images/no.png" alt="" />
+                            <p>部门无成员</p>
+                        </div>
+                        `;
+                    appendNode($('#operat'), str);
+                    return;
+                }
+            }
+            setAjaxN('/dept/listUserByDepartment?id='+id,function(data){
+                var code = data.code;
+                var msg = data.msg;
+                if (code == 0) {
+                    var users =  data.data.list;
+                    if (users == null || users.length == 0) {
+                        var str = `
+                            <div id="memberMask">
+                                <img src="./html/home/images/no.png" alt="" />
+                                <p>部门无成员</p>
+                            </div>
+                            `;
+                        appendNode($('#operat'), str);
+                    }else{
+                        users.forEach(element => {
+                            var tmp = parseFloat(element.temperature),
+                                lng = element.userLongitude,
+                                lat = element.userLatitude,
+                                str = `
+                            <a class="weui-cell  weui-cell_access weui-cell_example userLink" href="javascript:" userId="`+ element.userId +`" lat="`+lat+`" lng="`+lng+`">
+                                <div class="weui-cell__hd">`;
+                            var nT = new Date().getTime(),
+                                gT = new Date(element.gmtCreate).getTime(),
+                                dT = nT - gT;
+                            if(dT>difference) {
+                                str+=`<img class="imgCfg" src="images/memberN.png" alt="">`;
+                            }else {
+                                str+=`<img class="imgCfg" src="images/member.png" alt="">`;
+                            }
+
+                            str += `</div>
+                                <div class="weui-cell__bd">
+                                    <p style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">`+ element.name +`</p>
+                                    <p style="font-size: 12px; color: #929292;">`+ element.tel +`</p>
+                                </div>
+                                <div class="weui-cell__ft" style="width: 35%;">    
+                                `;  
+                            if(tmp === null||tmp === undefined){
+                                tmp = 0;
+                            }    
+                            if(tmp>=37.3) {
+                                str += `
+                                    <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+
+                            if(dT>difference) {
+                                str += `
+                                    <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                                `;
+                            }
+                            
+                            var mLng = parseFloat(element.railLongitude),
+                                mLat = parseFloat(element.railLatitude);
+                            var point = new BMap.Point(lng,lat),
+                                mPoint = new BMap.Point(mLng,mLat);
+                            var circle = new BMap.Circle(mPoint, element.radius, {fillColor:"blue", strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});
+                            var whtinScope = true;
+                            if(BMapLib.GeoUtils.isPointInCircle(point,circle)){
+                                //console.log("该point在circle内");
+                            }else {
+                                whtinScope = false;
+                            }
+                            if(whtinScope === false) {
+                                str += `
+                                    <img src="images/mapError.png" alt="" class="ftIcon"/>
+                                    `;
+                            }
+                            str += `
+                                    </div>
+                                </a>    
+                                `;
+                            appendNode(memberSum,str);
+                        });
+                    }
+                }else if(code == 10004){
+                    var str = `
+                        <div id="memberMask">
+                            <img src="./html/home/images/no.png" alt="" />
+                            <p>暂无权限查看</p>
+                        </div>
+                        `;
+                    appendNode($('#operat'), str);
+                }else{
+                    toastMsg(msg);
+                }
+            },function(){});
+        }
+        
+        //获取未分组用户信息
+        function getNotGrouped() {
+            getAjaxN("/dept/listUserByNoDepartment", function (data) {
+                if(data.code!=0){
+                    code = data.code;
+                    return;
+                }
+                notGrouped = data.data.list;
+
+            });
+        }
+        //未分组用户显示在顶级部门下方法
+        function addUserList() {
+            var userArr = notGrouped,
+                userLen = userArr.length,
+                i = 0;
+            if (userLen === 0) {
+                return;
+            }
+            for (i; i < userLen; i++) {
+                var user = userArr[i];
+                var tmp = parseFloat(user.temperature),
+                    lng = user.userLongitude,
+                    lat = user.userLatitude,
+                    str = `
+                <a class="weui-cell  weui-cell_access weui-cell_example userLink" href="javascript:" userId="`+ user.userId +`" lat="`+lat+`" lng="`+lng+`">
+                    <div class="weui-cell__hd">`;
+                var nT = new Date().getTime(),
+                    gT = new Date(user.gmtCreate).getTime(),
+                    dT = nT - gT;
+                if(dT>difference) {
+                    str+=`<img class="imgCfg" src="images/memberN.png" alt="">`;
+                }else {
+                    str+=`<img class="imgCfg" src="images/member.png" alt="">`;
+                }
+
+                str += `</div>
+                    <div class="weui-cell__bd">
+                        <p>`+ user.name +`</p>
+                        <p style="font-size: 12px; color: #929292;">`+ user.tel +`</p>
+                    </div>
+                    <div class="weui-cell__ft" style="width: 35%;">    
+                    `;  
+                if(tmp === null||tmp === undefined){
+                    tmp = 0;
+                }    
+                if(tmp>=37.3) {
+                    str += `
+                        <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                        `;
+                }
+
+                if(dT>difference) {
+                    str += `
+                        <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                    `;
+                }
+                
+                var mLng = parseFloat(user.railLongitude),
+                    mLat = parseFloat(user.railLatitude);
+                var point = new BMap.Point(lng,lat),
+                    mPoint = new BMap.Point(mLng,mLat);
+                var circle = new BMap.Circle(mPoint, user.radius, {fillColor:"blue", strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});
+                var whtinScope = true;
+                if(BMapLib.GeoUtils.isPointInCircle(point,circle)){
+                    //console.log("该point在circle内");
+                }else {
+                    whtinScope = false;
+                }
+                if(whtinScope === false) {
+                    str += `
+                        <img src="images/mapError.png" alt="" class="ftIcon"/>
+                        `;
+                }
+                str += `
+                        </div>
+                    </a> 
+                    `;
+                appendNode(memberSum, str);
+            }   
+        }
+        // addUserList();
+
+        /*---------------------------------------------------------------分组 end----------------------------------------------------------------*/
+
+        /*------------------------------------------搜索 login----------------------------------------------------*/
+        $('#scanIt').on('click', function () {
+            bubbles();
+        });
+        $('#search').on('click', function () {
+            $('#searchName').css("display", "block");
+            $('#mask').css("display", "block");
+
+            $searchBar.addClass('weui-search-bar_focusing');
+            $searchInput.focus();
+        });
+        $('#mask').on('click', function () {
+            $('#searchInput').val('');
+            $('#searchName').css("display", "none");
+            $('#mask').css("display", "none");
+        });
+        $('#userBack').on('click', function () {
+            $('#userArr').css("display", "none");
+        });
+        var $searchBar = $('#searchBar'),
+            $searchResult = $('#searchResult'),
+            $searchText = $('#searchText'),
+            $searchInput = $('#searchInput'),
+            $searchClear = $('#searchClear'),
+            $searchCancel = $('#searchCancel'),
+            page = 1,
+            limit = 7,
+            keyword;
+
+        function hideSearchResult() {
+            $searchResult.hide();
+            $searchInput.val('');
+            page = 1;
+        }
+        function cancelSearch() {
+            hideSearchResult();
+            $searchBar.removeClass('weui-search-bar_focusing');
+            $searchText.show();
+        }
+        function getSearch(limit, page, keyword) {
+            getAjaxN("/user/fuzzySearch?scope=all&keyword=" + keyword, function (data) {
+                var userArr = data.data.list,
+                    userLen = userArr.length,
+                    i = 0;
+                if (userLen !== 0) {
+                    for (i; i < userLen; i++) {
+                        var departmentList = userArr[i].departmentList.join(" | ").slice(0, 25);
+                        var seachTxt = $(`
+                            <div class="weui-cell weui-cell_active weui-cell_access serachUser" number="`+ userArr[i].id + `">
+                                <div class="weui-cell__bd weui-cell_primary">
+                                    <p>`+ userArr[i].name + `<span style="color: #929292; font-size: 12px;">` + ` ` + departmentList + `</span></p>
+                                    <p style="font-size: 12px; color: #929292;">`+ userArr[i].tel + `</p>
+                                </div>
+                            </div>
+                        `);
+                        $('#searchResult').append(seachTxt);
+                    }
+                }
+            });
+        }
+        // $searchResult.on('scroll', function () {
+        //     keyword = $('#searchInput').val()
+        //     if (this.scrollTop >= this.scrollHeight - this.offsetHeight) {
+        //         console.log("111");
+        //         page++;
+        //         getSearch(limit, page, keyword);
+        //     }
+        // });
+        $searchText.on('click', function () {
+            $searchBar.addClass('weui-search-bar_focusing');
+            $searchInput.focus();
+        });
+        $searchInput
+            .on('blur', function () {
+                if (!this.value.length) cancelSearch();
+            })
+            .on({
+                keyup: function () {
+                    if (this.value.length) {
+                        $('#searchResult').html('');
+                        keyword = $('#searchInput').val();
+                        getSearch(limit, page, keyword);
+                        $searchResult.show();
+                    } else {
+                        $searchResult.hide();
+                    }
+
+                    if ($('#searchInput').val() === '') {
+                        $('#searchResult').html('');
+                    }
+                },
+                keydown: function (e) {
+                    e.target.keyEvent = true;
+                },
+                input: function (e) {
+                    if (!e.target.keyEvent) {
+                        response()
+                    }
+                },
+                compositionstart: function (e) {
+                    e.target.isNeedPrevent = true;
+                },
+                compositionend: function (e) {
+                    e.target.isNeedPrevent = false;
+                }
+            });
+
+        /*----------------------------------------*/
+        function jeiliu(timeout) {
+            var timer;
+            function input(e) {
+                if (e.target.composing) {
+                    return;
+                }
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(() => {
+                    if (this.value.length) {
+                        $('#searchResult').html('');
+                        keyword = $('#searchInput').val();
+                        getSearch(limit, page, keyword);
+                        $searchResult.show();
+                    } else {
+                        $searchResult.hide();
+                    }
+
+                    if ($('#searchInput').val() === '') {
+                        $('#searchResult').html('');
+                    }
+                    timer = null;
+                }, timeout);
+            }
+            return input;
+        }
+
+        function onCompositionStart(e) {
+            e.target.composing = true;
+        }
+        function onCompositionEnd(e) {
+            e.target.composing = false;
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('input');
+            e.target.dispatchEvent(event);
+        }
+        var input_dom = $searchInput;
+        input_dom.on('input', jeiliu(200));
+        input_dom.on('compositionstart', onCompositionStart);
+        input_dom.on('compositionend', onCompositionEnd);
+        /*-----------------------------------*/
+
+        $('#searchResult').on('click', '.serachUser', function () {
+            var numArr = [$(this).attr("number")];
+            $('#searchInput').blur();
+            setAjax("/device/listDeviceAlarmInfoByUserId", numArr, function (data) {
+                var user = data.data[0];
+                if (user.longitude === null || user.longitude === null) {
+                    $('#userArr .weui-dialog__bd').text("该用户暂无位置信息")
+                    $('#userArr').css("display", "block");
+                } else {
+                    var lat = parseFloat(user.latitude),
+                        lng = parseFloat(user.longitude),
+                        userId = parseFloat(user.userId);
+                    $('#searchInput').val();
+                    $('#searchResult').html('');
+                    window.location.href = "./html/map/show.html?userId=" + userId + "&lng=" + lng + "&lat=" + lat;
+                }
+            });
+        });
+        $searchClear.on('click', function () {
+            hideSearchResult();
+            $searchInput.focus();
+        });
+        $searchCancel.on('click', function () {
+            cancelSearch();
+            $searchInput.blur();
+        });
+        /*------------------------------------------搜索 end----------------------------------------------------*/
+
+        /*------------------------------------------history login----------------------------------------------------*/
+        setAjaxN("/alarm/getAlarmView", function (data) {
+            var arr = data.data;
+            var newTime = arr.date;
+            $('#grandTotal i').text(newTime);
+            var totalObj = data.data;
+            var alarmSum = totalObj.alarmSum;
+            var newPSum = totalObj.newPSum;
+            var newPersonSum = totalObj.newPersonSum;
+            var newSum = totalObj.newSum;
+            var newTSum = totalObj.newTSum;
+            var personSum = totalObj.personSum;
+            var psum = totalObj.psum;
+            var tsum = totalObj.tsum;
+            var grandTotal1 = $('#grandTotal table tr')[2];
+            var grandTotal2 = $('#grandTotal table tr')[0];
+            grandTotal1.children[0].childNodes[1].innerText = '+' + newSum;
+            grandTotal1.children[1].childNodes[1].innerText = '+' + newPersonSum;
+            grandTotal1.children[2].childNodes[1].innerText = '+' + newTSum;
+            grandTotal1.children[3].childNodes[1].innerText = '+' + newPSum;
+            grandTotal2.children[0].innerText = alarmSum;
+            grandTotal2.children[1].innerText = personSum;
+            grandTotal2.children[2].innerText = psum;
+            grandTotal2.children[3].innerText = tsum;
+        });
+        /*------------------------------------------history end----------------------------------------------------*/
+
+        /*------------------------------------------管理 login----------------------------------------------------*/
+        $('#manage').on('click', function () {
+            var obj = {
+                "mId": $(this).attr("mId"),
+                "pId": $(this).attr("pId"),
+                "mName": $(this).attr("mName"),
+                "order": $(this).attr("order"),
+                "member": $(this).attr("member")
+            };
+            obj = encodeURI(JSON.stringify(obj));
+            store.set("manageObj", obj);
+            window.location.href = "./html/home/manage.html";
+        });
+        /*------------------------------------------管理 end----------------------------------------------------*/
+
+        /*------------------------------------------add_fromTop login----------------------------------------------------*/
+        //从顶级部门添加成员 #mobileMember
+        $('#mobileMember').on("click", function () {
+            var obj = {
+                "mId": mId,
+                "tId": 1,
+                "mName": mName
+            };
+            obj = encodeURI(JSON.stringify(obj));
+            window.location.href = "addOrdel.html?obj=" + obj;
+        });
+        /*------------------------------------------add_fromTop end----------------------------------------------------*/
+
+        /*------------------------------------------delMember login----------------------------------------------------*/
+        //从当前部门移除成员 #mobileMember
+        $('#delMember').on("click", function () {
+            var obj = {
+                "mId": mId,
+                "tId": 1,
+                "mName": mName,
+                "del": true
+            };
+            obj = encodeURI(JSON.stringify(obj));
+            window.location.href = "addOrdel.html?obj=" + obj;
+        });
+        /*------------------------------------------delMember end----------------------------------------------------*/
+
+        /*------------------------------------------userHistory login----------------------------------------------------*/
+        $('#userHistory').on('click', function () {
+            bubbles();
+            window.location.href = "./html/home/unbind_list.html";
+        });
+        /*------------------------------------------userHistory end----------------------------------------------------*/
+    });
+    
+</script>
+<style scoped>
+    /*---------------------icon start 定义使用 iconfont 的样式------------------------*/
+    @font-face {
+        font-family: 'iconfont';
+        src: url('iconfont.eot');
+        src: url('iconfont.eot?#iefix') format('embedded-opentype'),
+            url('iconfont.woff2') format('woff2'),
+            url('iconfont.woff') format('woff'),
+            url('iconfont.ttf') format('truetype'),
+            url('iconfont.svg#iconfont') format('svg');
+    }
+
+    .iconfont {
+        font-family: "iconfont" !important;
+        font-size: 16px;
+        font-style: normal;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /*---------------------icon end------------------------*/
+    .weui-tabbar__item .weui-tabbar__label {
+        color: #929292;
+    }
+
+    .weui-bar__item_on {
+        color: #4377ff;
+    }
+
+    .page {}
+
+    /*---------------------tabbar------------------------*/
+    .weui-tabbar {
+        background-color: #fff;
+    }
+
+    /*---------------------grid------------------------*/
+    .weui-grids .weui-grid {
+        background-color: #fff;
+    }
+
+    #loading,
+    #operat_load {
+        height: 100%;
+        width: 100%;
+        background-color: #fff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 501;
+    }
+
+    #loading {}
+
+    /*-------------------------weui 带跳转 login-------------------------*/
+    .weui-cell_access .weui-cell__ft:after {
+        content: "";
+        border-style: none;
+        right: -10px;
+    }
+
+    .weui-cell_access .weui-cell__ft {
+        padding-right: 0;
+    }
+
+    .weui-cells {
+        font-size: 14px;
+    }
+
+    .imgCfg {
+        width: 25px;
+        margin-right: 12px;
+        border-radius: 2px;
+        display: block;
+    }
+
+    #manage {
+        width: 7%;
+        height: 7%;
+        display: inline-block;
+    }
+
+    .sImg {
+        width: 100%;
+        height: 100%;
+        display: inline-block;
+        vertical-align: middle;
+        margin-top: -2px;
+        max-width: 22.81px;
+    }
+
+    .weui-cells__title {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 5px;
+        /* padding-bottom: 5px; */
+        color: #838584;
+        font-size: 12px;
+        background-color: #f2f3f5;
+    }
+
+    #topDepartment i {
+        font-style: normal;
+        font-size: 12px;
+        position: absolute;
+        top: 5px;
+        right: 16px;
+        color: #5090f1;
+    }
+
+    #topDepartment {
+        position: relative;
+    }
+
+    /*-------------------------weui 带跳转 end-------------------------*/
+
+    #search {
+        width: 86%;
+        background-color: #fff;
+        border: 1px solid #fff;
+        border-radius: 12px;
+        transform: translateX(-50%);
+        margin-left: 50%;
+        margin-bottom: 9.2px;
+        margin-top: 9.2px;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px;
+    }
+
+    #search.weui-cell:before {
+        border: 0;
+    }
+
+    #search .weui-cell__bd p {
+        font-size: 14px;
+        color: #B2B2B2;
+    }
+
+    #searchBar {
+        position: absolute;
+        width: 100%;
+        right: 0;
+    }
+
+    #manage_cells {
+        background-color: #f8f8f8;
+    }
+
+    #searchName {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: none;
+        z-index: 3;
+    }
+
+    #searchName {
+        width: 100%;
+        height: 60px;
+        background-color: #EFEFF4;
+        padding: 5px 0;
+        box-sizing: border-box;
+    }
+
+    #mask {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        z-index: 2;
+        opacity: .3;
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: none;
+    }
+
+    #searchResult {
+        max-height: 400px;
+        margin-top: 50px;
+        display: none;
+        overflow: auto;
+    }
+
+    .weui-search-bar:before,
+    .weui-search-bar:after {
+        border: 0;
+    }
+
+    .ftIcon {
+        max-width: 22px;
+        width: 32% !important;
+        vertical-align: middle;
+    }
+
+    #operat .weui-cells:before {
+        border: 0;
+    }
+
+    .userLink.weui-cell {
+        padding: 5px 15px;
+    }
+
+    /*---------------------table login-----------------------*/
+    .tdBgc {
+        background-color: #f4f4f4;
+        border-radius: 5px;
+        table-layout: auto;
+        min-width: 67px;
+    }
+
+    .tdcolor {}
+    
+    .my-toast {
+        height: 26px;
+        min-height: 0;
+        border-radius: 5px;
+        bottom: 57px;
+        position: fixed;
+        z-index: 5000;
+        left: 50%;
+        margin-left: -2.1em;
+        background: rgba(17, 17, 17, 0.7);
+        text-align: center;
+        border-radius: 5px;
+        color: #FFFFFF;
+        font-size: 14px;
+        padding: 0 27px;
+        transform: translateX(-10%);
+    }
+
+    #grandTotal {
+        display: block;
+        width: 94%;
+        background-color: #fff;
+        margin-top: 10px;
+        border: 1px solid #fff;
+        border-radius: 15px;
+        margin: 9.2px auto;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px;
+        min-height: 168.5px;
+        min-width: 303px;
+    }
+
+    #grandTotal table {
+        color: #000;
+        padding: 0;
+        box-sizing: border-box;
+        width: 100%;
+        text-align: center;
+        padding-bottom: 0;
+    }
+
+    /*---------------------table end-----------------------*/
+
+    /*---------------------userHistory login-----------------------*/
+    #userHistory {
+        height: 40px;
+        width: 90%;
+        border-top: 1px solid #efefef;
+        margin: 0 auto;
+    }
+
+    #grandTotal h1 img,
+    #grandTotal #userHistory img {
+        width: 15px;
+        float: right;
+        margin-right: 21px;
+        margin-top: 6px;
+    }
+
+    #grandTotal #userHistory img {
+        margin-right: 0;
+        margin-top: 3px;
+    }
+
+    #userHistory {
+        padding: 10px 0;
+        box-sizing: border-box;
+    }
+
+    #userHistory div {
+        height: 100%;
+        display: inline-block;
+    }
+
+    #userHistory span {
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: #000;
+        color: #2d2d2d;
+        font-weight: 700;
+    }
+
+    /*---------------------userHistory end-----------------------*/
+
+    /*---------------------topCount login-----------------------*/
+    #topCount {
+        width: 38%;
+        color: #cd6212;
+        display: inline-block;
+    }
+
+    #topCount img {
+        width: 16%;
+    }
+    .aBline {
+        
+        padding-bottom: 1px;
+        border-bottom: 1px solid #ffbb12;
+        min-width: 25px;
+        display: inline-block;
+        text-align: center;
+    }
+    /*---------------------topCount end-----------------------*/
+
+    /*部门无成员*/
+    #memberMask {
+        width: 100%;
+        color: #9da2a5;
+        overflow: hidden;
+        text-align: center;
+        margin-top: 101px;
+    }
+    #memberMask img {
+        width: 60px;
+        height: 60px;
+    }
+    #memberMask p {
+        text-align: center;
+        color: #9da2a6;
+        font-size: 14px;
+        background-color: #fff;
+    }
+    /* 部门告警统计详情 */
+    .weui-dialog__bd_alarm{
+        min-height: 40px;
+        font-size: 15px;
+        word-wrap: break-word;
+        color: #999999;
+        padding-left: 30px;
+        text-align: left;
+    }
+    .weui-dialog__bd_alarm span{
+        padding-left: 20px;
+    }
+</style>
+</script>
+    
+    <script type="text/template" id="footerTmpl">
+        <div class="page__ft">
+            <a href="javascript:home()"><img src="images/icon_footer_link.png" /></a>
+        </div>
+    </script>
+    <script src="./zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="./example.js"></script>
+</body>
+</html>

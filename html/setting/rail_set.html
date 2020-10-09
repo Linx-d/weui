@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>围栏管理</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script type="text/javascript" src="../../js/store.min.js"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab" style="height: 100%; background-color: #f8f8f8;">
+                <div style="height: 85%; background-color: #f8f8f8;">
+                    <!-- class=".weui-cells__title"  -->
+                    <!--新增围栏-->
+                    <div id="mapContainer">
+                        <div id="addMap" style="height: 100%; width: 100%;"></div>
+                        <!--地址输入框-->
+                        <div class="weui-cell weui-cell_active"
+                            style="position: absolute; left: 0; top: 10px; background-color: #fff; width: 88%; border-radius: 5px; transform: translateX(-50%); left: 50%; box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px;">
+                            <div class="weui-cell__hd"><label class="weui-label" style="width: 74px;">地址</label></div>
+                            <div class="weui-cell__bd" id="r-result">
+                                <input class="weui-input" placeholder="请输入目标地址" style="letter-spacing: 2px;" value=''
+                                    id="suggestId" />
+                            </div>
+                            <div class="weui-cell__ft" style="display: none;">
+                                <i
+                                    style="background-color: #e6e6e6; color: #fff; display: inline-block; width: 20px; height: 20px; border-radius: 50%; line-height: 20px; text-align: center;">&Chi;</i>
+                            </div>
+                            <div id="searchResultPanel"
+                                style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+                        </div>
+                        <div class="weui-cells weui-cells_form"
+                            style="margin-top: 0; max-height: 100px; padding: 0 15px; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <div class="weui-cell weui-cell_active" style="padding-left: 0;">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">围栏名称:</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="railName" name="railName" placeholder="请输入围栏名称" />
+                                </div>
+                                <div class="weui-cell__ft" id="captRail">
+                                    <i class="weui-icon-warn"></i>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_active" style="padding-left: 0;">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">半径:</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="railRadius" name="railRadius" type="number"
+                                        placeholder="100" />
+                                </div>
+                                <span>m</span>
+                                <div class="weui-cell__ft" id="captRadius">
+                                    <i class="weui-icon-warn"></i>
+                                </div>
+                            </div>
+                            <!--Map know-->
+                            <div class="js_dialog" id="promptKnow" style="display: none;">
+                                <div class="weui-mask"></div>
+                                <div class="weui-dialog">
+                                    <div class="weui-dialog__bd"></div>
+                                    <div class="weui-dialog__ft">
+                                        <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">知道了</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Map know-->
+                        </div>
+                        <div id="oper" style="padding: 0 15px;">
+                            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_primary btnC"
+                                id="addOk">添加</a>
+                            <a href="javascript:history.back();"
+                                class="weui-btn weui-btn_mini weui-btn_primary btnC_back" id="addBack">返回</a>
+                        </div>
+                    </div>
+                    <div class="page__hd" style="background-color: #fff; padding: 0; margin-bottom: 8px;">
+                        <div class="setting_current"
+                            style="height: 65px; background-color: #fff; text-align: center; line-height: 65px; font-size: 22px; ">
+                            <div>围栏管理</div>
+                        </div>
+                    </div>
+
+
+                    <div class="page__bd" style="width: 100%; height: 84%; background-color: #f8f8f8;">
+                        <div id="linkList" style="height: 100%;">
+                            <div class="weui-cells" style="height: 100%; overflow: auto;">
+                                <div id="loading">
+                                    <div class="weui-loadmore">
+                                        <i class="weui-loading"></i>
+                                        <span class="weui-loadmore__tips">正在加载</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--set know-->
+                        <div class="js_dialog" id="setKnow" style="display: none; z-index: 5002">
+                            <div class="weui-mask" style="z-index: 5001"></div>
+                            <div class="weui-dialog" style="z-index: 5003">
+                                <div class="weui-dialog__bd"></div>
+                                <div class="weui-dialog__ft">
+                                    <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">知道了</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!--set know-->
+
+                        <!--BEGIN 删除围栏-->
+                        <div class="js_dialog" id="delLog" style="display: none;">
+                            <div class="weui-mask"></div>
+                            <div class="weui-dialog">
+                                <div class="weui-dialog__hd"><strong class="weui-dialog__title">围栏设置</strong></div>
+                                <div class="weui-dialog__bd">是否删除当前围栏</div>
+                                <div class="weui-dialog__ft">
+                                    <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                                    <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!--END 删除围栏-->
+
+                        <!--BEGIN actionSheet-->
+                        <div>
+                            <div class="weui-mask" id="iosMask" style="display: none;"></div>
+                            <div class="weui-actionsheet" id="iosActionsheet">
+                                <div class="weui-actionsheet__title">
+                                    <p class="weui-actionsheet__title-text">围栏设置</p>
+                                    <div class="line"></div>
+                                </div>
+                                <div class="weui-actionsheet__menu">
+                                    <div class="weui-actionsheet__cell" id="setChangeRail" number="">信息</div>
+                                    <div class="weui-actionsheet__cell" id="userRail" number="">用户</div>
+                                    <div class="weui-actionsheet__cell weui-actionsheet__cell_warn" id="delRail"
+                                        number="">删除</div>
+                                </div>
+                                <div class="weui-actionsheet__action">
+                                    <div class="weui-actionsheet__cell" id="iosActionsheetCancel">取消</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="background-color: #f8f8f8;">
+                    <a href="javascript:;" id="addRail"
+                        class="weui-btn weui-btn_mini weui-btn_primary btn_bound">新增围栏</a>
+                    <a href="javascript:history.back();" class="weui-btn weui-btn_mini weui-btn_primary btn_back">返回</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    $(function(){
+        captLogin();
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "../map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+
+        setTimeout(function(){
+            $('#loading').css("display", "none");
+        }, 500);
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+    /*rail*/
+    $(function(){
+        var setList = $('#iosActionsheet .weui-actionsheet__menu .weui-actionsheet__cell');
+        var setLen = setList.length;
+        /*----------------ios login-------------------------*/ 
+        var $iosActionsheet = $('#iosActionsheet');
+        var $iosMask = $('#iosMask');
+        function hideActionSheet() {
+            setList.each(function(){
+                $(this).removeAttr("number");
+            });
+            $iosActionsheet.removeClass('weui-actionsheet_toggle');
+            $iosMask.fadeOut(200);
+        }
+        $iosMask.on('click', hideActionSheet);
+        $('#iosActionsheetCancel').on('click', hideActionSheet);
+
+        $('#linkList').on('click', '.showIOSActionSheet', function() {
+            var num = $(this).attr("num");
+            setList.each(function(){
+                $(this).attr("number", num);
+            });
+            $iosActionsheet.addClass('weui-actionsheet_toggle');
+            $iosMask.fadeIn(200);
+        });
+        
+        upRailList();
+
+        var $iosDialog1 = $('#iosDialog1');
+        //新增围栏按钮
+        $('#addRail').on('click', function(){
+            $('#railName').val('');
+            $('#mapContainer').fadeIn(200);
+            //$iosDialog1.fadeIn(200);
+        });
+
+        /*$('#iosActionsheet .weui-actionsheet__title').on('touchstart', function(e) {
+            $(this).on('touchmove', function(e) {
+                //console.log(e.targetTouches[0].pageY);
+                var actionSheetH = (document.documentElement.clientHeight - e.targetTouches[0].pageY)/3;
+                $('#iosActionsheet .weui-actionsheet__menu').css("height", actionSheetH);
+            });
+        });*/
+        //确定新增
+/*-------------------------add login-------------------------------------*/
+        captLen('railRadius', 6);
+        var addLng, addLat, railAddr_add;
+        //knowBtn #promptKnow a
+        $('#promptKnow a').on('click', function() {
+            $('#promptKnow').css("display", "none");
+        });
+        //mask #promptKnow .weui-mask
+        $('#promptKnow .weui-mask').on('click', function() {
+            $('#promptKnow').css("display", "none");
+        });
+        $('#railName').on('blur', function(){ //新增名称
+            changeN = $('#railName').val();
+            setAjaxNA("/rail/queryRailByName?railName="+changeN,function(data){
+                if(data.code===0) {
+                    $('#captRail').removeClass('weui-cell_warn');
+                }else {
+                    //msg #changeKnow .weui-dialog__bd  //btn #changeKnow a 
+                    //#captRail .weui-cell_warn
+                    $('#captRail').addClass('weui-cell_warn');
+                    $('#promptKnow .weui-dialog__bd').text(data.msg);
+                    $('#promptKnow').css("display", "block");
+                }
+            }, function(){
+                window.location.href = "./empty_page.html";
+            });
+        });
+        $('#addOk').on('click', function() {
+            $('#suggestId').blur();
+            $('#railName').blur();
+            $('#railRadius').blur();
+            if($('#railName').val() == '') {
+                //msg #promptKnow .weui-dialog__bd //knowBtn #promptKnow a
+                $('#promptKnow .weui-dialog__bd').text('请输入围栏名称');
+                $('#promptKnow').css("display", "block");
+            }else {
+                if(addLat===undefined || addLng===undefined) {
+                    $('#promptKnow .weui-dialog__bd').text('请选取围栏中心');
+                    $('#promptKnow').css("display", "block");
+                    return;
+                }
+                var addObj = {
+                        "latitude": addLat,
+                        "longitude": addLng,
+                        "radius":  $('#railRadius').val() ||100,
+                        "railName": $('#railName').val(),
+                        "railAddr": railAddr_add
+                };
+
+                addRail(addLng, addLat);
+                changeN = $('#railName').val();
+                setAjaxNA("/rail/queryRailByName?railName="+changeN,function(data){
+                    if(data.code===0) {
+                        $('#captRail').removeClass('weui-cell_warn');
+                        setAjax("/rail/addRail", addObj,function(data){
+                            console.log(data)
+                            if(data.code ==0) {
+                                $('#promptKnow .weui-dialog__bd').text(data.msg);
+                                $('#promptKnow').css("display", "block");
+                                return;
+                            }else {
+                                $('#linkList .weui-cells').html('');
+                                upRailList();
+                                $('#promptKnow .weui-dialog__bd').text(data.msg);
+                                $('#promptKnow').css("display", "block");
+                                //$('#mapContainer').fadeOut(200); 
+                            } 
+                        }, function(){
+                            window.location.href = "./empty_page.html";
+                        });                        
+                    }else {
+                        //msg #changeKnow .weui-dialog__bd  //btn #changeKnow a 
+                        //#captRail .weui-cell_warn
+                        $('#captRail').addClass('weui-cell_warn');
+                        $('#promptKnow .weui-dialog__bd').text(data.msg);
+                        $('#promptKnow').css("display", "block");
+                    }
+                }, function(){
+                    window.location.href = "./empty_page.html";
+                });		
+            }
+        });
+        $('#addBack').on('click', function() {
+            $('#linkList .weui-cells').html('');
+            upRailList();
+            $('#railRadius').val('');
+            $('#r-result #suggestId').val('');
+            $('#mapContainer').fadeOut(200);
+        });
+        // 百度地图API功能
+        var map = new BMap.Map("addMap");    // 创建Map实例
+        var point = new BMap.Point(106.48665, 29.490295);
+        var arr;
+        map.centerAndZoom(point, 20);  // 初始化地图,设置中心点坐标和地图级别
+        map.addControl(new BMap.NavigationControl({
+            offset: new BMap.Size(10, 200)
+        }));    // 按钮平移缩放控件
+        map.addControl(new BMap.ScaleControl({
+            anchor: BMAP_ANCHOR_BOTTOM_LEFT,
+            offset: new BMap.Size(10, 10)
+        }));    // 一个比例尺控件
+        //单击获取点击的经纬度
+        map.addEventListener("click",function(e){
+            $('#suggestId').blur();
+            $('#railName').blur();
+            $('#railRadius').blur();
+            addLat = e.point.lat;
+            addLng = e.point.lng;
+            addRail(addLng, addLat);
+        });
+        map.addEventListener('dragstart', function(){
+            $('#railName').blur();
+            $('#railRadius').blur();
+        });
+        /*------------地址输入框 login-------------*/
+        $('#r-result #suggestId').on('input', function(){
+            if($('#r-result #suggestId').val() !== '') {
+                $('#r-result').next().css("display", "block");
+            }else {
+                $('#r-result').next().css("display", "none");
+            }
+        });
+        $('#r-result').next().children('i').on('click', function(){
+            $('#r-result #suggestId').val(''); 
+        });
+        function G(id) {
+                return document.getElementById(id);
+            }
+        var ac = new BMap.Autocomplete(    //建立一个自动完成的对象
+                {"input" : "suggestId"
+                ,"location" : map
+            });
+            ac.addEventListener("onhighlight", function(e) {  //鼠标放在下拉列表上的事件
+                var str = "";
+                var _value = e.fromitem.value;
+                var value = "";
+                if (e.fromitem.index > -1) {
+                    value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                }    
+                str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+                
+                value = "";
+                if (e.toitem.index > -1) {
+                    _value = e.toitem.value;
+                    value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                }    
+                str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+                G("searchResultPanel").innerHTML = str;
+            });
+
+            var myValue;
+            ac.addEventListener("onconfirm", function(e) {    //鼠标点击下拉列表后的事件
+                $('#suggestId').blur();
+                $('#railName').blur();
+                $('#railRadius').blur();
+                var _value = e.item.value;
+                myValue = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                G("searchResultPanel").innerHTML ="onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+                setPlace();
+            });
+
+            function setPlace(){
+                map.clearOverlays();    //清除地图上所有覆盖物
+                function myFun(){
+                    var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+                    map.centerAndZoom(pp, 18);
+                    map.addOverlay(new BMap.Marker(pp));    //添加标注
+                    var radius = $('#railRadius').val() || 100;
+                    var circle = new BMap.Circle(pp, radius, {strokeColor:"blue", strokeWeight: 1, strokeOpacity: 0.01, fillColor: '#53aeff', fillOpacity: 0.4});
+                    map.addOverlay(circle);
+                    addLat = pp.lat;
+                    addLng = pp.lng;
+                    var geoc = new BMap.Geocoder();
+                    geoc.getLocation(pp, function(rs){
+                        var addComp = rs.addressComponents;
+                        //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                        railAddr_add = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+                    });
+                }
+                var local = new BMap.LocalSearch(map, { //智能搜索
+                    onSearchComplete: myFun
+                });
+                local.search(myValue);
+            }
+            function addRail(addLng, addLat) {
+                var point = new BMap.Point(addLng, addLat);
+                var geoc = new BMap.Geocoder();
+                geoc.getLocation(point, function(rs){
+                    var addComp = rs.addressComponents;
+                    //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                    railAddr_add = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+                    var markerTxt = addComp.district + addComp.street + addComp.streetNumber;
+                    var radius = $('#railRadius').val() || 100;
+                    var marker = new BMap.Marker(point);
+                    var circle = new BMap.Circle(point, radius, {strokeColor:"blue", strokeWeight: 1, strokeOpacity: 0.01, fillColor: '#53aeff', fillOpacity: 0.4});
+                    map.clearOverlays();    //清除地图上所有覆盖物
+                    map.addOverlay(marker);
+                    var label = new BMap.Label(markerTxt,{offset:new BMap.Size(20,-10)});
+                    marker.setLabel(label);
+                    map.addOverlay(circle);
+                });
+            }
+        /*-----------------地址输入框 end-----------------*/
+        //围栏名称验证 railName captRail
+/*-------------------------add end--------------------------------------*/ 
+
+    /*-------------------------修改围栏 login--------------------------------------*/ 
+        $('#changeRaduis').on('input', function(){
+            if($(this).val().length>6) {
+                $(this).val($(this).val().slice(0, 6));
+            }
+            
+        });
+        //修改围栏 #changeRail
+        var changeLng,
+            changeLat,
+            changeR,
+            changeN,
+            changeNumber,
+            railAddr_change;
+        $('#setChangeRail').on('click', function() { //change BTN
+            changeNumber = parseInt($(this).attr("number"));
+            setAjaxNA("/rail/listRail", function(data){
+                var arr = data.data.list,
+                    len = arr.length,
+                    i;
+                for(i=0; i<len; i++) {
+                    if(arr[i].id === changeNumber) {
+                        var objStr = encodeURI(JSON.stringify(arr[i]));
+                        store.set("railObj", objStr);
+                        window.location.href = "./rail_fence.html";
+                        return;	
+                    }
+                }
+            }, function(){
+                //window.location.href = "./empty_page.html";
+            });
+        });
+    /*-------------------------修改围栏 end--------------------------------------*/ 
+
+    /*-------------------------用户设置 login--------------------------------------*/
+        //用户设置 #userRail
+        $('#userRail').on('click', function() {
+            window.location.href = "./userRs.html?number="+$(this).attr("number");
+        });
+    /*-------------------------用户设置 end--------------------------------------*/
+
+    /*-------------------------删除围栏 login--------------------------------------*/
+        var delNumber;
+        //msg #delLog .weui-dialog__bd   //back #delLog .weui-dialog__btn_default sure #delLog .weui-dialog__btn_primary
+        $('#delLog .weui-dialog__btn_default').on('click', function(){
+            $('#delLog').css("display", "none");
+        });
+        $('#delLog .weui-dialog__btn_primary').on('click', function(){
+            var delId = {
+                "id": delNumber
+            };
+            setAjax("/rail/deleteRail", delId, function(data){
+                //msg #setKnow .weui-dialog__bd  //btn #setKnow a
+                if(data.code==0) {
+                    $('#linkList .weui-cells').html('');
+                    upRailList();
+                    hideActionSheet();
+                    $('#setKnow .weui-dialog__bd').text(data.msg);
+                    $('#setKnow').css("display", "block");
+                }else {
+                    $('#setKnow .weui-dialog__bd').text(data.msg);
+                    $('#setKnow').css("display", "block");
+                }
+            }, function() {
+                window.location.href = "./empty_page.html";
+            });
+            $(this).parents("#delLog").css("display", "none");
+        });
+        //删除围栏 #delRail
+        $('#setKnow a').on('click', function() {
+            $('#setKnow').css("display", "none");
+        });
+        //"msg": "请解绑用户后删除该围栏！" "code": 0 //"code": 500, "msg": "删除成功",  
+        $('#delRail').on('click', function() {
+            $('#delLog').css("display", "block");
+            delNumber = parseInt($(this).attr("number"));
+            hideActionSheet();
+        });
+    /*-------------------------删除围栏 end--------------------------------------*/ 
+        
+        /*----------------ios login-------------------------*/
+        //获取所有围栏信息
+        function upRailList() {
+            setAjaxN("/rail/listRail", function(data){
+                var railList = data.data.list;
+                if(railList.length === 0) {
+                    var noYet = $(`
+                            <div class="weui-loadmore weui-loadmore_line" style="height: 100%; width: 65%; margin: 1em auto; background-color: #fff; box-sizing: border-box;">
+                                <span class="weui-loadmore__tips">暂无内容</span>
+                            </div>
+                        `);
+                    $('#linkList .weui-cells').html('');
+                    $('#linkList .weui-cells').append(noYet);
+                }
+                for(var i=0, len=railList.length; i<len; i++) {
+                    var railId = railList[i].id,
+                        railName = railList[i].railName,
+                        railObj = {},
+                        longitude = railList[i].longitude,
+                        latitude = railList[i].latitude,
+                        railAddr = railList[i].railAddr || "暂无位置信息",
+                        userSum = railList[i].personSum;
+                    railObj = {
+                        "railId": railId,
+                        "railName": railName,
+                        "serSum": i+1,
+                        "userSum": userSum,
+                        "railAddr": railAddr
+                    }
+                    addLink(railObj);
+                }
+            }, function(){
+                window.location.href = "./empty_page.html";
+            });
+        }
+        function addLink(obj){//id, name, serNum, userSum
+            $('#linkList .weui-cells').append(createLink(obj));
+
+        }
+        function createLink(obj) {
+            var link = $(`<a class="weui-cell  weui-cell_access showIOSActionSheet" href="javascript:" num="`+ obj.railId +`">`+`
+                <div class="weui-cell__bd">
+                    <p>` + obj.serSum + `.` + obj.railName +`</p>
+                    <p class="link_desc">`+ obj.railAddr+`</p>
+                </div>
+                <div class="weui-cell__ft" id="name">`+ obj.userSum + "人"+`</div>
+            </a>`);
+            return link;
+        }
+    });
+
+    
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-tab__panel {
+            padding: 0;
+        }
+
+        #r-result {
+            width: 100%;
+        }
+
+        .weui-dialog {
+            max-width: 768px;
+            max-height: 511px;
+        }
+
+        #addMap {
+            padding: 0;
+        }
+
+        #mapContainer {
+            height: 72%;
+            width: 100%;
+            position: absolute;
+            display: none;
+            z-index: 10000;
+        }
+
+        #addMap .anchorBL {
+            display: none;
+        }
+
+        #addMap .BMap_scaleCtrl {
+            display: block;
+        }
+
+        #promptKnow {
+            z-index: 10002;
+        }
+
+        .tangram-suggestion-main .tangram-suggestion {
+            z-index: 10000;
+        }
+
+        .weui-cell_access .weui-cell__ft:after {
+            content: "";
+            border-style: none;
+            right: -10px;
+        }
+
+        .weui-cell_access .weui-cell__ft {
+            padding-right: 0;
+        }
+
+        .link_desc {
+            font-size: 12px;
+            color: gray;
+            padding-left: 13px;
+        }
+
+        #linkList .weui-cells {
+            margin: 0;
+        }
+
+        /*------------------iosActionsheet login-------------------------*/
+        #iosActionsheet {
+            color: #3b3b3b;
+        }
+
+        #iosActionsheet,
+        #iosActionsheet .weui-actionsheet__title {
+            border-radius: 10px 10px 0 0;
+        }
+
+        #iosActionsheet .weui-actionsheet__title {
+            color: #929292;
+            font-size: 18px;
+        }
+
+        #iosActionsheet .weui-actionsheet__cell {
+            padding: 18px;
+        }
+
+        #iosActionsheet .weui-actionsheet__action {
+            margin-top: 0;
+        }
+
+        #iosActionsheetCancel.weui-actionsheet__cell {
+            background-color: #f1f1f1;
+            border-radius: 125px;
+            width: 80%;
+            padding: 10px;
+            margin: 0 auto;
+        }
+
+        #iosActionsheet .line {
+            background-color: #c9c9c9;
+            position: absolute;
+            top: 12px;
+            height: 5px;
+            width: 36px;
+            border-radius: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .weui-actionsheet__title .weui-actionsheet__title-text {
+            margin-top: 16px;
+        }
+
+        .weui-loadmore_line .weui-loadmore__tips {
+            background-color: #fff;
+        }
+
+        #linkList .weui-cells {}
+
+        #mapContainer .weui-cells_form {}
+
+        /*------------------iosActionsheet end-------------------------*/
+
+        /*------------------btn_bound login-------------------------*/
+        .btn_bound,
+        .btn_back {
+            width: 70%;
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+            transform: translateX(-50%);
+        }
+
+        .btn_back {
+            margin: 0 50% !important;
+        }
+
+        .btn_bound {
+            margin-left: 50%;
+        }
+
+        .btnC {
+            display: block;
+        }
+
+        .btnC_back {
+            display: block;
+        }
+
+        .weui-btn+.weui-btn {
+            margin-top: 7px;
+        }
+
+        /*------------------btn_bound end-------------------------*/
+        #oper {
+            background-color: #fff;
+            height: 300px;
+        }
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

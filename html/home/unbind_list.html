@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title></title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="../../js/store.min.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+
+    <div class="container" id="container"></div>
+
+    <script type="text/html" id="tpl_home">
+<div class="page__bd" id="load_hd" style="height: 100%;">
+
+    <div id="loading">
+        <div class="weui-loadmore">
+            <i class="weui-loading"></i>
+            <span class="weui-loadmore__tips">正在加载</span>
+        </div>
+    </div>
+    <div class="weui-tab">
+        <div class="weui-tab__panel" id="operat">
+            <div id="searchName">
+                <div class="weui-search-bar" id="searchBar">
+                    <form class="weui-search-bar__form">
+                        <div class="weui-search-bar__box">
+                            <i class="weui-icon-search"></i>
+                            <input type="search" class="weui-search-bar__input" id="searchInput" placeholder="搜索" required/>
+                            <a href="javascript:" class="weui-icon-clear" id="searchClear"></a>
+                        </div>
+                        <label class="weui-search-bar__label" id="searchText">
+                            <i class="weui-icon-search"></i>
+                            <span>搜索</span>
+                        </label>
+                    </form>
+                    <a href="javascript:" class="weui-search-bar__cancel-btn" id="searchCancel">取消</a>
+                </div>
+                <div class="weui-cells searchbar-result" id="searchResult">
+                    <!--search-->
+                </div>
+            </div>
+            <div id="mask"></div>
+
+            <!--enter-->
+            <div class="weui-cells__title" id="mName">已解绑用户</div>
+            <div class="weui-cells" id="memberSum">
+                <!--普通成员-->
+                
+                <!--部门-->
+                
+            </div>
+
+            <div class="js_dialog" id="msg" style="display: none;">
+                <div class="weui-mask"></div>
+                <div class="weui-dialog">
+                    <div class="weui-dialog__bd">请扫描正确二维码</div>
+                    <div class="weui-dialog__ft">
+                    <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary" id="msgBack">返回</a>
+                    </div>
+                </div>
+            </div>
+
+            <!--BEGIN toast-->
+            <div id="toast" style="display: none;">
+                <div class="my-toast">
+                    <p class="weui-toast__content">已完成</p>
+                </div>
+            </div>
+            <!--end toast-->
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    /**/
+    $(function(){
+        //获取corpId
+        var corpId = getCookie();
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+    $(function(){
+        setTimeout(function(){
+            $('#loading').css("display", "none");
+        }, 500);
+        $(document)[0].title = "记录";
+/*------------------------------------------unitieBind_user login--------------------------------------------------*/ 
+        var memberSum =  $('#memberSum'),
+            obj = {},
+            memberArr = [],
+            code = 0,
+            countNum = 0;
+
+        addUserList();
+        if (code === 10004) {
+            var str = `
+            <div id="memberMascountNum">
+                <img src="images/no.png" alt="" />
+                <p>暂无权限查看</p>
+            </div>
+            `;
+            appendNode($('#operat'), str);
+            $('#changeDepart').css("display", "none");
+        }else{
+            if(countNum === 0) {
+                var str = `
+                <div id="memberMascountNum">
+                    <img src="images/no.png" alt="" />
+                    <p>暂无成员</p>
+                </div>
+                `;
+                appendNode($('#operat'), str);
+                $('#changeDepart').css("display", "none");
+            }else {
+                $('#delDepart').css("display", "none");
+                $('#moreManage').css("display", "none");
+            };
+        }
+        
+
+        function addUserList() {
+            getAjaxNA("/userUntie/findAllUserUntie", function(data){
+                code = data.code;
+                var userArr = data.data.list,
+                    userLen = userArr.length,                    
+                    i = 0,
+                    count = 0;
+                for(i; i<userLen; i++) {
+                    countNum++;
+                    var user = userArr[i],
+                        str = `
+                    <a class="weui-cell  weui-cell_access weui-cell_example upInfo" href="javascript:" userId="`+ user.userId +`" >
+                        <div class="weui-cell__hd"><img class="imgCfg" src="images/memberN.png" alt=""></div>
+                        <div class="weui-cell__bd">
+                            <p>`+ user.name +`</p>
+                            <p style="font-size: 12px; color: #929292;">`+ user.tel +`</p>
+                        </div>
+                        <div class="weui-cell__ft">
+                        </div>
+                    </a>    
+                        `;
+                    appendNode(memberSum, str);
+                }
+            }, function(){
+                window.location.href = "./html/home/empty_page.html";
+            });
+        }
+        $('#memberSum').on('click', '.upInfo', function(){
+            var userId = $(this).attr("userId");
+            window.location.href = "../map/show_unitie.html?userId=" + userId;
+        });
+/*------------------------------------------unitieBind_user end----------------------------------------------------*/   
+
+/*------------------------------------------搜索 login----------------------------------------------------*/
+        $('#scanIt').on('click', function(){
+            bubbles();
+        });
+        $('#search').on('click', function(){
+            $('#searchName').css("display", "block");
+            $('#mask').css("display", "block");
+        });
+        $('#searchName').on('click', function() {
+            $('#mask').css("display", "block");
+        });
+        $('#mask').on('click', function(){
+            $('#searchInput').val('');
+            $('#searchInput').blur();
+            $('#mask').css("display", "none");
+        });
+        $('#userBack').on('click', function(){
+            $('#userArr').css("display", "none");
+        });
+        var $searchBar = $('#searchBar'),
+            $searchResult = $('#searchResult'),
+            $searchText = $('#searchText'),
+            $searchInput = $('#searchInput'),
+            $searchClear = $('#searchClear'),
+            $searchCancel = $('#searchCancel'),
+            page = 1;
+
+        function hideSearchResult(){
+            $searchResult.hide();
+            $searchInput.val('');
+            page = 1;
+        }
+        function cancelSearch(){
+            hideSearchResult();
+            $searchBar.removeClass('weui-search-bar_focusing');
+            $searchText.show();
+        }
+        function getSearch(keyword) {
+            getAjaxN("/userUntie/fuzzySearch?" +"&keyword=" + keyword, function(data){
+                var userArr = data.data.list,
+                    userLen = userArr.length,
+                    i = 0;
+                if(userLen !== 0) {
+                    for(i; i<userLen; i++) {
+                        var departmentList = userArr[i].departmentList.join(" | ").slice(0, 25);
+                        var seachTxt = $(`
+                            <div class="weui-cell weui-cell_active weui-cell_access searchUser" number="`+ userArr[i].id +`">
+                                <div class="weui-cell__bd weui-cell_primary">
+                                    <p>`+ userArr[i].name +`<span style="color: #929292; font-size: 12px;">`+` `+departmentList+`</span></p>
+                                    <p style="font-size: 12px; color: #929292;">`+ userArr[i].tel +`</p>
+                                </div>
+                            </div>
+                        `);
+                        $('#searchResult').append(seachTxt);
+                    }
+                }
+            }, function(XMLHttpRequest){
+                alert('getsearch' + XMLHttpRequest.status);
+                window.location.href = "empty_page.html";
+            });
+        }
+        $searchResult.on('scroll', function(){
+            var keyword = $('#searchInput').val()
+            if(this.scrollTop>=this.scrollHeight-this.offsetHeight) {
+                page++;
+                //getSearch(keyword);
+            }
+        });
+        $searchText.on('click', function(){
+            $searchBar.addClass('weui-search-bar_focusing');
+            $searchInput.focus();
+        });
+        $searchInput
+            .on('blur', function () {
+                if(!this.value.length) cancelSearch();
+            })
+            .on({keyup: function(){
+                if(this.value.length) {
+                    $('#searchResult').html('');
+                    var keyword = $('#searchInput').val();
+                    getSearch(keyword);
+                    $searchResult.show();
+                } else {
+                    $searchResult.hide();
+                }
+
+                if($('#searchInput').val() === '') {
+                    $('#searchResult').html('');
+                }
+            },
+            keydown : function(e){
+                e.target.keyEvent = true ; 
+            },
+            input : function(e){
+                if(!e.target.keyEvent){
+                    response()
+                }        
+            },
+            compositionstart : function(e){
+                e.target.isNeedPrevent = true;
+            },
+            compositionend : function(e){
+                e.target.isNeedPrevent = false;
+            }
+        });
+
+        /*----------------------------------------*/
+        function jeiliu(timeout){
+            var timer;
+            function input(e){
+            if(e.target.composing){
+                return ;
+            }
+            if(timer){
+               clearTimeout(timer);
+            }
+            timer = setTimeout(() => {
+                   if(this.value.length) {
+                       $('#searchResult').html('');
+                       keyword = $('#searchInput').val();
+                       getSearch(keyword);
+                       $searchResult.show();
+                   } else {
+                       $searchResult.hide();
+                   }
+
+                   if($('#searchInput').val() === '') {
+                       $('#searchResult').html('');
+                   }
+                   timer = null;
+               }, timeout); 
+            }
+            return input;
+        }
+
+        function onCompositionStart(e){
+            e.target.composing = true;
+        }
+        function onCompositionEnd(e){
+            //console.log(e.target)
+            e.target.composing = false;
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('input');
+            e.target.dispatchEvent(event);
+        }
+        var input_dom = $searchInput;
+        input_dom.on('input',jeiliu(200));
+        input_dom.on('compositionstart',onCompositionStart);
+        input_dom.on('compositionend',onCompositionEnd);
+        /*-----------------------------------*/
+        $('#searchResult').on('touchstart', '.searchUser', function() {
+            var numArr = [$(this).attr("number")];
+            $('#searchInput').blur();
+            window.location.href = "../map/show_unitie.html?userId=" + numArr;
+            // setAjax("/device/listDeviceAlarmInfoByUserId", numArr, function(data) {console.log(data)
+            //     var user = data.data[0];
+            //     if(user.longitude===null ||user.longitude===null) {
+            //         $('#userArr .weui-dialog__bd').text("该用户暂无位置信息")
+            //         $('#userArr').css("display", "block");
+            //     }else {
+            //         var lat = parseFloat(user.latitude),
+            //             lng = parseFloat(user.longitude),
+            //             userId = parseFloat(user.userId);
+            //         $('#searchInput').val(''); 
+            //         $('#searchResult').html('');
+            //         window.location.href = "../map/show_unitie.html?userId=" + userId + "&lng=" + lng + "&lat=" + lat;
+            //     }
+            // }, function(XMLHttpRequest){
+            //     alert('listDeviceAlarmInfoByUserId' + XMLHttpRequest.status);
+            //     window.location.href = "./html/home/empty_page.html";
+            // });
+        });
+        $searchClear.on('click', function(){
+            hideSearchResult();
+            $searchInput.focus();
+        });
+        $searchCancel.on('click', function(){
+            cancelSearch();
+            $searchInput.blur();
+        });
+/*------------------------------------------搜索 end----------------------------------------------------*/
+
+/*------------------------------------------btn login----------------------------------------------------*/  
+        $("#msgBack").on('click', function() {
+            $('#msg').css("display", "none");
+        });
+        $('#msg .weui-mask').on('click', function() {
+            $('#msg').css("display", "none");
+        });
+/*------------------------------------------btn end----------------------------------------------------*/  
+    });
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        .weui-tab__panel {
+            padding-bottom: 0;
+        }
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        #loading,
+        #operat_load {
+            height: 100%;
+            width: 100%;
+            background-color: #fff;
+            z-index: 3;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        /*-------------------------weui 带跳转 login-------------------------*/
+        .weui-cell_access .weui-cell__ft:after {
+            content: "";
+            border-style: none;
+            right: -10px;
+        }
+
+        .weui-cell_access .weui-cell__ft {
+            padding-right: 0;
+        }
+
+        .weui-cells {
+            font-size: 14px;
+        }
+
+        .imgCfg {
+            width: 25px;
+            margin-right: 12px;
+            border-radius: 2px;
+            display: block;
+        }
+
+        .weui-cells__title {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            color: #838584;
+            font-size: 12px;
+            background-color: #f2f3f5;
+        }
+
+        /*-------------------------weui 带跳转 end-------------------------*/
+
+        #memberMask {
+            width: 100%;
+            color: #9da2a5;
+        }
+
+        #memberMask img {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        #memberMask p {
+            text-align: center;
+            color: #9da2a6;
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            font-size: 14px;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        #tabbar_my a {
+            height: 40px;
+            margin: 0 auto;
+            display: inline-block;
+            padding: 0;
+            color: #5090f1;
+        }
+
+        #tabbar_my a p {
+            font-size: 14px;
+            transform: translateY(35%);
+        }
+
+        .my-toast {
+            height: 26px;
+            min-height: 0;
+            border-radius: 5px;
+            bottom: 57px;
+            position: fixed;
+            z-index: 5000;
+            left: 50%;
+            margin-left: -3.8em;
+            background: rgba(17, 17, 17, 0.7);
+            text-align: center;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 14px;
+            padding: 0 27px;
+            transform: translateX(-10%);
+        }
+
+        #memberSum .weui-cell__ft img {
+            width: 50%;
+            vertical-align: middle;
+        }
+
+        #memberSum .weui-cell__ft {
+            width: 10%;
+        }
+
+        .upInfo.weui-cell_access {
+            padding: 5px 15px;
+        }
+
+        /*-------------------------search login-------------------------*/
+        #operat {
+            background-color: #f8f8f8;
+        }
+
+        #search {
+            width: 86%;
+            background-color: #fff;
+            border: 1px solid #fff;
+            border-radius: 12px;
+            transform: translateX(-50%);
+            margin-left: 50%;
+            margin-bottom: 9.2px;
+            margin-top: 9.2px;
+            box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px;
+        }
+
+        #search.weui-cell:before {
+            border: 0;
+        }
+
+        #search .weui-cell__bd p {
+            font-size: 14px;
+            color: #B2B2B2;
+        }
+
+        #mName {
+            margin-top: 52px;
+        }
+
+        #searchName {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+            z-index: 4;
+        }
+
+        #searchName {
+            width: 100%;
+            height: 60px;
+            background-color: #EFEFF4;
+            padding: 5px 0;
+            box-sizing: border-box;
+        }
+
+        #searchName,
+        #searchBar {
+            background-color: #f2f3f5;
+        }
+
+        #mask {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 3;
+            opacity: .3;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: none;
+        }
+
+        #searchResult {
+            margin-top: 0;
+            max-height: 400px;
+            display: none;
+            overflow: auto;
+        }
+
+        .weui-search-bar:before,
+        .weui-search-bar:after {
+            border: 0;
+        }
+
+        .searchUser {
+            z-index: 7;
+        }
+
+        /*-------------------------search end-------------------------*/
+        /*部门无成员*/
+        #memberMascountNum {
+            width: 100%;
+            color: #9da2a5;
+            overflow: hidden;
+            text-align: center;
+            margin-top: 101px;
+        }
+        #memberMascountNum img {
+            width: 200px;
+            height: 200px;
+        }
+        #memberMascountNum p {
+            text-align: center;
+            color: #9da2a6;
+            font-size: 14px;
+            background-color: #f8f8f8;
+        }
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>地图</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script type="text/javascript" src="js/TextIconOverlay.js"></script>
+    <script type="text/javascript" src="js/MarkerClusterer.js"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div id="loading">
+        <div class="weui-loadmore">
+            <i class="weui-loading"></i>
+            <span class="weui-loadmore__tips">正在加载</span>
+        </div>
+    </div>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-tab__panel">
+                    <div class="map" id="vx_container"
+                        style="background-color: #fff; width:100%; height: 100%; color: #fff; position: absolute;">
+                        <!--地图容器-->
+                    </div>
+                    <!--地址输入框-->
+                    <div class="weui-cell weui-cell_active" id="addrToggle"
+                        style="position: absolute; top: 10px; background-color: #fff; width: 88%; border-radius: 5px; transform: translateX(-50%); left: 50%; box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px; height: 25px;">
+                        <div class="weui-cell__hd"><label class="weui-label" style="width: 74px;">地址</label></div>
+                        <div class="weui-cell__bd" id="r-result">
+                            <input class="weui-input" placeholder="请输入目标地址" style="letter-spacing: 2px;" value=''
+                                id="suggestId" />
+                        </div>
+                        <div class="weui-cell__ft" style="display: none;">
+                            <img src="images/close.png" alt="" style="width: 20px; height: 20px; margin-top: 3.5px;">
+                        </div>
+                        <div id="searchResultPanel"
+                            style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+                    </div>
+                    <!--<div id="showLog" style="position: absolute; top: 100px; right: 5px;">
+                        <img src="./images/showLog.jpg" alt="" style="width: 74px;">
+                    </div>-->
+                    <div class="js_dialog" id="userArr" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog">
+                            <div class="weui-dialog__bd"></div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary"
+                                    id="userBack">知道了</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="multi">
+                        <ul>
+                            <li>
+                                <div class="mask"></div>
+                                <img src="./images/sosuo1.png" alt="">
+                                <span>搜索</span>
+                            </li>
+                            <!--<li><img src="" alt=""></li>
+                            <li><img src="" alt=""></li>
+                            <li><img src="" alt=""></li>-->
+                        </ul>
+                    </div>
+                    <div id="searchName">
+                        <div id="leftB">
+                            <img src="images/left.png" alt="">
+                        </div>
+                        <div class="weui-search-bar" id="searchBar">
+                            <form class="weui-search-bar__form">
+                                <div class="weui-search-bar__box">
+                                    <i class="weui-icon-search"></i>
+                                    <input type="search" class="weui-search-bar__input" id="searchInput"
+                                        placeholder="搜索" required />
+                                    <a href="javascript:" class="weui-icon-clear" id="searchClear"></a>
+                                </div>
+                                <label class="weui-search-bar__label" id="searchText">
+                                    <i class="weui-icon-search"></i>
+                                    <span>搜索</span>
+                                </label>
+                            </form>
+                            <a href="javascript:" class="weui-search-bar__cancel-btn" id="searchCancel">取消</a>
+                        </div>
+                        <div class="weui-cells searchbar-result" id="searchResult">
+                            <!--search-->
+                        </div>
+                    </div>
+                    <div class="weui-tabbar" id="tabbar_my">
+                        <a href="javascript:" id="index" class="weui-tabbar__item">
+                            <img src="../../images/home.png" alt="" class="weui-tabbar__icon">
+                            <p class="weui-tabbar__label">首页</p>
+                        </a>
+                        <a href="javascript:" id="map" class="weui-tabbar__item weui-bar__item_on">
+                            <img src="../../images/map_on.png" alt="" class="weui-tabbar__icon">
+                            <p class="weui-tabbar__label">地图</p>
+                        </a>
+                        <a href="javascript:" id="setting" class="weui-tabbar__item">
+                            <img src="../../images/setting.png" alt="" class="weui-tabbar__icon">
+                            <p class="weui-tabbar__label">设置</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    /*百度地图API功能*/
+    $(function(){
+        captLogin();
+        // 百度地图API功能
+        var map = new BMap.Map("vx_container");    // 创建Map实例
+        var patams = getPatams();
+        var mapLng = patams.lng,
+            mapLat = patams.lat;
+        if(mapLat===undefined || mapLng===undefined) {
+            setAjaxNA("/rail/listRail?pageSize=100&pageNum=1", function(data){
+                var firstRail = data.data.list[0];
+                mapLng = parseFloat(firstRail.longitude);
+                mapLat = parseFloat(firstRail.latitude);
+            }, function(){
+                window.location.href = "empty_page.html";
+            });
+        }
+        var point = new BMap.Point(mapLng, mapLat);
+        var arr, loadingTime;
+        map.centerAndZoom(point, 19);  // 初始化地图,设置中心点坐标和地图级别
+        /*------------地址输入框 login-------------*/
+        $('#r-result #suggestId').on('input', function(){
+            if($('#r-result #suggestId').val() !== '') {
+                $('#r-result').next().css("display", "block");
+            }else {
+                $('#r-result').next().css("display", "none");
+            }
+        });
+        $('#r-result').next().children('img').on('click', function(){
+            $('#r-result #suggestId').val(''); 
+        });
+        function G(id) {
+                return document.getElementById(id);
+            }
+        var ac = new BMap.Autocomplete(    //建立一个自动完成的对象
+                {"input" : "suggestId"
+                ,"location" : map
+            });
+
+            ac.addEventListener("onhighlight", function(e) {  //鼠标放在下拉列表上的事件
+            var str = "";
+                var _value = e.fromitem.value;
+                var value = "";
+                if (e.fromitem.index > -1) {
+                    value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                }    
+                str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+                
+                value = "";
+                if (e.toitem.index > -1) {
+                    _value = e.toitem.value;
+                    value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                }    
+                str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+                G("searchResultPanel").innerHTML = str;
+            });
+
+            var myValue;
+            ac.addEventListener("onconfirm", function(e) {    //鼠标点击下拉列表后的事件
+                $('#suggestId').blur();
+            var _value = e.item.value;
+                myValue = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+                G("searchResultPanel").innerHTML ="onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+                
+                setPlace();
+            });
+
+            function setPlace(){
+                //map.clearOverlays();    //清除地图上所有覆盖物
+                function myFun(){
+                    var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+                    map.centerAndZoom(pp, 18);
+                    //map.addOverlay(new BMap.Marker(pp));    //添加标注
+                }
+                var local = new BMap.LocalSearch(map, { //智能搜索
+                    onSearchComplete: myFun
+                });
+                local.search(myValue);
+            }
+        /*-----------------地址输入框 end-----------------*/
+
+        //添加地图类型控件
+        map.addControl(new BMap.NavigationControl({
+            offset: new BMap.Size(5, 185)
+        }));    // 按钮平移缩放控件
+        map.addControl(new BMap.ScaleControl({
+            anchor: BMAP_ANCHOR_BOTTOM_LEFT,
+            offset: new BMap.Size(10, 80)
+        }));    // 一个比例尺控件
+        map.enableScrollWheelZoom(true);     // 开启鼠标滚轮缩放
+        var pointArray = [],
+            markers = []; // 创建标注 数组
+        
+        $('#userBack').on('click', function(){
+            $('#userArr').css("display", "none");
+        });
+        setTimeout(function(){
+            $('#loading').css("display", "none");
+        }, 800);
+        /*发送 ajax 获取用户最新位置信息 ---------*/
+        getPosition();
+        function getPosition() {
+            setAjaxN("/deviceData/listUserLocation", function(data) {
+                arr = data.data;
+                if(arr.length === 0) {
+                    $('#userArr .weui-dialog__bd').text("目前暂无用户")
+                    $('#userArr').css("display", "block");
+                }
+                loadingTime = arr.length;
+                for(var i=0, len=arr.length; i<len; i++) {
+                    //console.log(arr[i]);
+                    if(arr[i] == null) { //判断是否有这个用户
+                        continue;
+                    }
+                    var longitude = arr[i].longitude,
+                        latitude = arr[i].latitude,
+                        point = new BMap.Point(longitude, latitude),
+                        status = arr[i].online, //在线状态
+                        abnormal = arr[i].temperature, //异常体温
+                        tnumber = arr[i].tnumber || 0,
+                        pnumber = arr[i].pnumber || 0,
+                        icon = '',
+                        label_color = '',
+                        marker_bgc = '',
+                        userId, 
+                        myIcon,
+                        label;
+                    if(status) {
+                        icon = "../../images/marker_online.png"; //在线状态icon
+                        label_color = "#287de1";
+                    }else {
+                        icon = "../../images/marker_no.png"; //不在线状态icon
+                        label_color = "#bfbfbf";
+                    }
+                    if(parseFloat(abnormal)>=37.3) {
+                        icon = "../../images/marker_danger.png"; //体温异常状态icon
+                        label_color = "#c7000a";
+                    }
+                    pointArray[i] = point;
+                    myIcon = new BMap.Icon(icon, new BMap.Size(20,27)); //创键图标
+                    //addMarker(point);
+                    marker = new BMap.Marker(point,{icon:myIcon});
+                    //marker.setAnimation(BMAP_ANIMATION_BOUNCE);       动画    
+                    marker.disableDragging();  // 不可拖拽
+                    marker.addEventListener("click",function() {
+
+                    });
+                    marker.userId = arr[i].userId; //自定义属性
+                    marker.longitude = longitude;
+                    marker.latitude = latitude;
+                    markers.push(marker);
+                    label = new BMap.Label(arr[i].userName, {offset:new BMap.Size(10, -15)}); //文字标注
+                    label.setStyle({
+                        border: '1px solid '+label_color,
+                        color: label_color
+                    });//文字标注样式
+                    marker.setLabel(label);
+                }
+                //让所有点在视野范围内
+                map.setViewport(pointArray);
+                var markerClusterer = new BMapLib.MarkerClusterer(map, {markers:markers});
+                //var _styles =[{url:"http://haiyisoft.com/HYWX/wx/image/currentday.png",size: new BMap.Size(20, 20)}]
+                //var markerClusterer = new BMapLib.MarkerClusterer(map, {markers:markers,styles:_styles});
+            }, function(XMLHttpRequest) {
+                window.location.href = "./empty_page.html";
+            });
+        }
+
+        // 编写自定义函数,创建标注
+        function addMarker(point){
+            marker = new BMap.Marker(point,{icon:myIcon});
+            pointArray.push(marker)
+            //marker.setAnimation(BMAP_ANIMATION_BOUNCE);       动画    
+            marker.disableDragging();  // 不可拖拽
+            //为地图标注 注册事件
+            marker.addEventListener("click",function() {
+                var html = $(`
+                    <div class="userInfo" style="width:100%; height: 130px; color: #fff; bottom: 49px; position: absolute; border-radius: 5px; opacity: 0.8; background-color: #008cff;" id="popInfo">   
+                    <h4 id="myInfo_name" style="font-size: 18px; padding-left: 20px; display: inline-block; letter-spacing: 2px; margin-top: 20px;"></h4>
+                    <h4 id="myInfo_age" style="font-size: 18px; padding-right: 30px; letter-spacing: 2px; display: inline-block; float: right; margin-top: 20px;"></h4>
+                    <h4 id="myInfo_tel" style="font-size: 18px; padding-left: 20px; letter-spacing: 2px;"></h4>
+                    <h4 id="myInfo_address" style="font-size: 18px; padding-left: 20px; letter-spacing: 2px;"></h4>
+                    <a href="javascript:;" class="weui-btn_mini weui-btn_normal" style="position: absolute; bottom: 0; right: 0; border: 0; color: #fff; width: 17%; height: 100%; line-height: 130px;" id="get_locationInfo">查看详情 </a>   
+                    </div>
+                `);
+                $('#userArr').before(html);
+            });
+          //map.addOverlay(marker);    //增加点
+        }
+        
+        
+        //为地图标注之外 注册事件
+        var toggle = true,
+            time = 200,
+            timeOut = null,
+            ztimeOut = null;
+        map.addEventListener('dblclick', function(e){
+            if(e.overlay) {
+
+            }else {
+                clearTimeout(timeOut);
+            }
+        });
+        map.addEventListener('click', function(e) {
+            var eArr = [];
+            if(e.overlay){ //e.overlay 覆盖物
+                if(eArr.length === 0) {
+                    eArr.push(e.overlay.userId);
+                }else {
+                    eArr = [];
+                    eArr.push(e.overlay.userId);
+                }
+                if($('#popInfo').length > 0) {
+                    $('#popInfo').remove();
+                }
+                if(toggle) {
+                    infoH = "49px";
+                }else {
+                    infoH = "0";
+                }
+                var html = $(`
+                    <div class="userInfo" style="width:100%; color: #fff; bottom: `+ infoH +`; position: absolute; border-radius: 5px; opacity: 0.8; padding-bottom: 15px; background-color: #008cff;" id="popInfo">   
+                    <h4 id="myInfo_name" style="font-size: 18px; padding-left: 20px; display: inline-block; letter-spacing: 2px; margin-top: 20px;"></h4>
+                    <h4 id="myInfo_age" style="font-size: 18px; padding-right: 30px; letter-spacing: 2px; display: inline-block; float: right; margin-top: 20px;"></h4>
+                    <h4 id="myInfo_tel" style="font-size: 18px; padding-left: 20px; letter-spacing: 2px;"></h4>
+                    <h4 id="myInfo_address" style="font-size: 18px; padding-left: 20px; letter-spacing: 2px;"></h4>
+                    <a href="javascript:;" class="weui-btn_mini weui-btn_normal" style="position: absolute; bottom: 0; right: 0; border: 0; color: #fff; width: 17%; height: 100%; line-height: 130px;" id="get_locationInfo" lng="`+ e.overlay.longitude +`" lat="`+ e.overlay.latitude +`">查看详情 </a>   
+                    </div>
+                `);
+                $('#userArr').before(html);
+                /*--------------根据用户id获取用户信息-------------*/
+                setAjaxNA("/user/getUserById?userId="+eArr[0], function(data) {
+                    var sent_userId = eArr[0];
+                    var data_user = data.data;
+                    var name = data_user.name;
+                    var tel = data_user.tel;
+                    var age = data_user.age;
+                    var address = data_user.address;
+                    $('#myInfo_name').text("姓名: " + name);
+                    $('#myInfo_age').text("年龄: " + age);
+                    $('#myInfo_tel').text("电话: " + tel);
+                    $('#myInfo_address').text("地址: " + address);
+                    
+                }, function(data) {
+                    window.location.href = "./empty_page.html";
+                });
+                $("#get_locationInfo").on("click", function() {
+                    var thisLink = $(this);
+                    /*--------------根据用户id获取用户信息-------------*/
+                    setAjaxN("/user/getUserById?userId="+eArr[0], function(data) {
+                        var sent_userId = eArr[0];
+                        var url = "./show.html?userId=" + eArr[0] + "&lng=" + thisLink.attr("lng") + "&lat=" + thisLink.attr("lat");
+                        window.location.href = url;
+                    }, function(data) {
+                        window.location.href = "./empty_page.html";
+                    });
+                });
+            }else{
+                clearTimeout(timeOut);
+                timeOut = setTimeout(function(){
+                    if($('#popInfo').length===1 || $('#searchResult').children().length!==0 || $('#suggestId').val()!=='') {
+                        if($('#popInfo').length===1) {
+                            $('#popInfo').remove();
+                        }
+                        if($('#searchResult').children().length!==0) {
+                            $('#searchResult').html('');
+                            $('#searchInput').val('');
+                            $('#searchInput').blur();
+                        }
+                        if($('#suggestId').val()!=='') {
+                            $('#suggestId').val('');
+                        }
+                    }else {
+                    if(toggle) {
+                        toggle = false;
+                        $('#addrToggle').css({"top": "-60px", "opacity": 0});
+                        $('#tabbar_my').css({"bottom": "-53px", "opacity": 0});
+                        //$('#showLog').css({"top": "-35px", "opacity": 0});
+                        $('#vx_container .BMap_stdMpCtrl').css("bottom", "8px");
+                        $('.anchorBL').css("bottom", "8px");
+                        $('#multi').css({"top": "15px", "opacity": 1});
+                        $('#suggestId').val('');
+                        $('#searchInput').val('');
+                        $('#searchInput').blur();
+                        $('#searchName').css("top", "-60px");
+                        $('#suggestId').blur();
+                    }else {
+                        toggle = true;
+                        $('#addrToggle').css({"top": "10px", "opacity": 1});
+                        $('#tabbar_my').css({"bottom": "0", "opacity": 1});
+                        //$('#showLog').css({"top": "100px", "opacity": 1});
+                        $('#vx_container .BMap_stdMpCtrl').css("bottom", "185px");
+                        $('.anchorBL').css("bottom", "80px");
+                        $('#multi').css({"top": "70px", "opacity": 1});
+                        $('#searchName').css("top", "0");
+                    } 
+                    }
+                }, time);
+            } 
+        });
+        map.addEventListener('zoomstart', function(e){
+            clearTimeout(ztimeOut);
+            $('#vx_container .BMap_scaleCtrl').fadeIn(100);
+        });
+        map.addEventListener('zoomend', function(e){
+            ztimeOut = setTimeout(function(){
+                $('#vx_container .BMap_scaleCtrl').fadeOut(1000);
+            }, 200);
+        });
+        $('#userArr a').on('click', function() {
+            $('#userArr').css("display", "none");
+        });
+
+/*--------------------------------------multi login-------------------------------------------*/        
+        $('#multi li:nth-child(1)').on('touchstart', function(){
+            $('#multi li:nth-child(1) .mask').css("opacity", "0.8");
+            $('#multi').css("display", "none");
+            $('#searchName').css("top", "0");
+            $('#searchName').css("display", "block");
+            $('#popInfo').remove();
+        });
+        $('#multi li:nth-child(1)').on('touchend', function(){
+            $('#multi li:nth-child(1) .mask').css("opacity", "0");
+        });
+        $('#searchName #leftB').on('touchstart', function() {
+            $('#searchInput').val('');
+            $('#searchName').css("display", "none"); 
+            $('#multi').css("display", "block");
+            $('#mask').css("display", "none");
+        });
+
+        var $searchBar = $('#searchBar'),
+            $searchResult = $('#searchResult'),
+            $searchText = $('#searchText'),
+            $searchInput = $('#searchInput'),
+            $searchClear = $('#searchClear'),
+            $searchCancel = $('#searchCancel'),
+            page = 1,
+            limit = 7,
+            keyword;
+
+        function hideSearchResult(){
+            $searchResult.hide();
+            $searchInput.val('');
+            page = 1;
+        }
+        function cancelSearch(){
+            hideSearchResult();
+            $searchBar.removeClass('weui-search-bar_focusing');
+            $searchText.show();
+        }
+        function getSearch(limit, page, keyword) {
+            getAjaxN("/user/fuzzySearch?scope=all&pageNum="+ page +"&pageSize="+ limit +"&keyword=" + keyword, function(data){
+                var userArr = data.data.list,
+                    userLen = userArr.length,
+                    i = 0;
+                if(userLen !== 0) {
+                    for(i; i<userLen; i++) {
+                        var departmentList = userArr[i].departmentList.join(" | ").slice(0, 25);
+                        var seachTxt = $(`
+                            <div class="weui-cell weui-cell_active weui-cell_access serachUser" number="`+ userArr[i].id +`">
+                                <div class="weui-cell__bd weui-cell_primary">
+                                    <p>`+ userArr[i].name +`<span style="color: #929292; font-size: 12px;">`+` `+departmentList+`</span></p>
+                                    <p style="font-size: 12px; color: #929292;">`+ userArr[i].tel +`</p>
+                                </div>
+                            </div>
+                        `);
+                        $('#searchResult').append(seachTxt);
+                    }
+                }
+            }, function(){
+                window.location.href = "empty_page.html";
+            });
+        }
+        $searchResult.on('scroll', function(){
+            keyword = $('#searchInput').val()
+            if(this.scrollTop>=this.scrollHeight-this.offsetHeight) {
+                page++;
+                getSearch(limit, page, keyword);
+            }
+        });
+        $searchText.on('click', function(){
+            $searchBar.addClass('weui-search-bar_focusing');
+            $searchInput.focus();
+        });
+        $searchInput
+            .on('blur', function () {
+                if(!this.value.length) cancelSearch();
+            })
+            .on({keyup: function(){
+                if(this.value.length) {
+                    $('#searchResult').html('');
+                    keyword = $('#searchInput').val();
+                    getSearch(limit, page, keyword);
+                    $searchResult.show();
+                } else {
+                    $searchResult.hide();
+                }
+
+                if($('#searchInput').val() === '') {
+                    $('#searchResult').html('');
+                }
+            },
+            keydown : function(e){
+                e.target.keyEvent = true ; 
+            },
+            input : function(e){
+                if(!e.target.keyEvent){
+                    response()
+                }        
+            },
+            compositionstart : function(e){
+                e.target.isNeedPrevent = true;
+            },
+            compositionend : function(e){
+                e.target.isNeedPrevent = false;
+            }
+        });
+
+        /*----------------------------------------*/
+        function jeiliu(timeout){
+            var timer;
+            function input(e){
+            if(e.target.composing){
+                return ;
+            }
+            if(timer){
+                clearTimeout(timer);
+            }
+            timer = setTimeout(() => {
+                if(this.value.length) {
+                    $('#searchResult').html('');
+                    keyword = $('#searchInput').val();
+                    getSearch(limit, page, keyword);
+                    $searchResult.show();
+                } else {
+                    $searchResult.hide();
+                }
+
+                if($('#searchInput').val() === '') {
+                    $('#searchResult').html('');
+                }
+                timer = null;
+            }, timeout); 
+            }
+            return input;
+        }
+
+        function onCompositionStart(e){
+            e.target.composing = true;
+        }
+        function onCompositionEnd(e){
+            //console.log(e.target)
+            e.target.composing = false;
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('input');
+            e.target.dispatchEvent(event);
+        }
+        var input_dom = $searchInput;
+        input_dom.on('input',jeiliu(200));
+        input_dom.on('compositionstart',onCompositionStart);
+        input_dom.on('compositionend',onCompositionEnd);
+        /*-----------------------------------*/
+
+        $('#searchResult').on('click', '.serachUser', function() {
+            var numArr = [$(this).attr("number")];
+            $('#searchInput').blur();
+            setAjax("/device/listDeviceAlarmInfoByUserId", numArr, function(data) {
+                var user = data.data[0];
+                if(user.longitude===null ||user.longitude===null) {
+                    $('#userArr .weui-dialog__bd').text("该用户暂无位置信息")
+                    $('#userArr').css("display", "block");
+                }else {
+                    $('#searchResult').html('');
+                    var lat = parseFloat(user.latitude),
+                        lng = parseFloat(user.longitude);
+                    var point = new BMap.Point(lng, lat);
+                    map.centerAndZoom(point, 20);  // 初始化地图,设置中心点坐标和地图级别 
+                }
+            }, function(){
+                window.location.href = "empty_page.html";
+            });
+        });
+        $searchClear.on('click', function(){
+            hideSearchResult();
+            $searchInput.focus();
+        });
+        $searchCancel.on('click', function(){
+            cancelSearch();
+            $searchInput.blur();
+        });
+/*--------------------------------------multi end-------------------------------------------*/
+    });
+    /**/
+    $(function(){
+        //获取corpId
+        var corpId = getCookie();
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "./map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+</script>
+        <style scoped>
+            .weui-tabbar__item .weui-tabbar__label {
+                color: #929292;
+            }
+
+            .weui-bar__item_on {
+                color: #4377ff;
+            }
+
+            .page {}
+
+            /*---------------------tabbar------------------------*/
+            .weui-tabbar {
+                background-color: #fff;
+            }
+
+            /*---------------------grid------------------------*/
+            .weui-grids .weui-grid {
+                background-color: #fff;
+            }
+
+            .BMap_scaleCtrl {}
+
+            .BMap_cpyCtrl {
+                display: none;
+            }
+
+            /*------地图标注 显示隐藏--------*/
+            .userInfo_hide {
+                display: none;
+            }
+
+            .userInfo_show {
+                display: block;
+            }
+
+            #vx_container .anchorBL {
+                display: none;
+            }
+
+            /*#vx_container .BMap_scaleCtrl {
+        display: block;
+    }*/
+            #loading {
+                height: 100%;
+                width: 100%;
+                background-color: #fff;
+                z-index: 1;
+                position: fixed;
+            }
+
+            #addrToggle,
+            #tabbar_my,
+            #showLog,
+            #vx_container .BMap_stdMpCtrl,
+            #vx_container .anchorBL,
+            #multi,
+            #searchName {
+                transition: 0.5s;
+            }
+
+            /*------地图标注 显示隐藏 end--------*/
+
+            /*------multi login--------*/
+            #multi {
+                width: 35px;
+                position: absolute;
+                top: 70px;
+                right: 2%;
+                background-color: #fff;
+                border-radius: 5px;
+                box-shadow: rgba(0, 0, 0, 0.1) 0 0 8px;
+            }
+
+            #multi ul {
+                height: 100%;
+                color: #373737;
+                font-size: 12px;
+            }
+
+            #multi li {
+                height: 100%;
+                width: 100%;
+                border-bottom: 1px solid #e0e0e0;
+                padding-top: 5px;
+                margin: 0 5px;
+            }
+
+            #multi li:last-child {
+                border: 0;
+            }
+
+            #multi li:nth-child(1) {
+                box-sizing: border-box;
+                position: relative;
+            }
+
+            #multi li:nth-child(1) img {
+                width: 25px;
+                height: 25px;
+            }
+
+            #multi li:nth-child(1) .mask {
+                position: absolute;
+                opacity: 0;
+                background-color: #999;
+                height: 55px;
+                width: 35px;
+                top: 0;
+                left: -5px;
+                border-radius: 5px;
+            }
+
+            .weui-cells {
+                margin-top: 0;
+            }
+
+            #searchName {
+                display: none;
+                position: absolute;
+                top: -44px;
+                width: 100%;
+                right: 0;
+                height: 60px;
+                background-color: #EFEFF4;
+                padding: 5px 0;
+                box-sizing: border-box;
+            }
+
+            #searchName #leftB {
+                position: absolute;
+                left: 0;
+                width: 10%;
+                top: -5px;
+                background-color: #efeff4;
+                height: 60px;
+                text-align: center;
+            }
+
+            #searchName #leftB img {
+                width: 20px;
+                height: 20px;
+                position: absolute;
+                transform: translateY(-50%);
+                top: 50%;
+            }
+
+            #searchBar {
+                position: absolute;
+                width: 90%;
+                right: 0;
+            }
+
+            #searchResult {
+                margin-top: 50px;
+                display: none;
+                overflow: auto;
+            }
+
+            .weui-search-bar:before,
+            .weui-search-bar:after {
+                border: 0;
+            }
+
+            /*------multi end--------*/
+        </style>
+        </script>
+        <script src="../../zepto.min.js"></script>
+        <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+        <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+        <script src="../../example.js"></script>
+</body>
+
+</html>

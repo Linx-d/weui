@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>添加成员</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script type="text/javascript" src="../../js/bMpLib.js"></script>
+    <script type="text/javascript" src="../../js/store.min.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+
+    <div class="container" id="container"></div>
+
+    <script type="text/html" id="tpl_home">
+        <div class="page__bd" id="load_hd" style="height: 100%;">
+
+            <div id="loading">
+                <div class="weui-loadmore">
+                    <i class="weui-loading"></i>
+                    <span class="weui-loadmore__tips">正在加载</span>
+                </div>
+            </div>
+            <div class="weui-tab">
+                <div class="weui-tab__panel" id="operat">
+
+                    <!--enter-->
+                    <div class="weui-cells weui-cells_checkbox">
+                        <div id="memberSum">
+                            <!--部门-->
+                        </div>
+                    </div>
+
+                    <!--BEGIN modify memberLog-->
+                    <div class="js_dialog" id="memberLog" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog weui-skin_android">
+                            <div class="weui-dialog__hd">添加成员</div>
+                            <div class="weui-dialog__bd">
+                                <strong class="weui-dialog__title">是否添加这些人到<span></span>去</strong>
+                            </div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--END modify memberLog-->
+
+                    <!--BEGIN modify memberLog-->
+                    <div class="js_dialog" id="delMemberLog" style="display: none;">
+                        <div class="weui-mask"></div>
+                        <div class="weui-dialog weui-skin_android">
+                            <div class="weui-dialog__hd">移除成员</div>
+                            <div class="weui-dialog__bd">
+                                <strong class="weui-dialog__title">是否从<span></span>中移除这些成员</strong>
+                            </div>
+                            <div class="weui-dialog__ft">
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_default">取消</a>
+                                <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--END modify memberLog-->
+
+                    <!--BEGIN toast-->
+                    <div id="toast" style="display: none;">
+                        <div class="my-toast">
+                            <p class="weui-toast__content">已完成</p>
+                        </div>
+                    </div>
+                    <!--end toast-->
+
+                </div>
+                <div class="weui-tabbar" id="tabbar_my">
+                    <a href="javascript:" id="selectAll" class="weui-tabbar__item weui-bar__item_on">
+                        <p class="weui-tabbar__label">选择</p>
+                    </a>
+                    <a href="javascript:" id="addLog" class="weui-tabbar__item weui-bar__item_on">
+                        <p class="weui-tabbar__label">添加</p>
+                    </a>
+                    <a href="javascript:" id="delLog" class="weui-tabbar__item weui-bar__item_on">
+                        <p class="weui-tabbar__label">移除</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            /**/
+            $(function () {
+                var winH = $(window).height();
+                var categorySpace = 10;
+
+                $('.js_item').on('click', function () {
+                    var id = $(this).data('id');
+                    window.pageManager.go(id);
+                });
+                $('.js_category').on('click', function () {
+                    var $this = $(this),
+                        $inner = $this.next('.js_categoryInner'),
+                        $page = $this.parents('.page'),
+                        $parent = $(this).parent('li');
+                    var innerH = $inner.data('height');
+
+                    if (!innerH) {
+                        $inner.css('height', 'auto');
+                        innerH = $inner.height();
+                        $inner.removeAttr('style');
+                        $inner.data('height', innerH);
+                    }
+
+                    if ($parent.hasClass('js_show')) {
+                        $parent.removeClass('js_show');
+                    } else {
+                        $parent.siblings().removeClass('js_show');
+
+                        $parent.addClass('js_show');
+                        if (this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH) {
+                            var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH +
+                                categorySpace;
+
+                            if (scrollTop > this.offsetTop) {
+                                scrollTop = this.offsetTop - categorySpace;
+                            }
+
+                            $page.scrollTop(scrollTop);
+                        }
+                    }
+
+                    var winH = $(window).height();
+                    var $foot = $('body').find('.page__ft');
+                    if ($foot.length < 1) return;
+
+                    if ($foot.position().top + $foot.height() < winH) {
+                        $foot.addClass('j_bottom');
+                    } else {
+                        $foot.removeClass('j_bottom');
+                    }
+                });
+            });
+            $(function () {
+                captLogin();
+                setTimeout(function () {
+                    $('#loading').css("display", "none");
+                }, 500);
+                var patams = JSON.parse(decodeURI(store.get("addOrdel"))),
+                    mId = parseInt(patams.mId),
+                    tId = parseInt(patams.tId),
+                    mName = patams.mName;
+                $('#memberLog .weui-dialog__bd span').text('"' + mName + '"');
+                $('#delMemberLog .weui-dialog__bd span').text('"' + mName + '"');
+                if (patams.del === undefined) {
+                    $('#delLog').css("display", "none");
+                    $(document)[0].title = "添加成员";
+                    addUserList_msg(tId, mId);
+                    if (k === 0) {
+                        var str = `
+                <div id="memberMask">
+                    <img src="images/no.png" alt="" />
+                    <p>部门无成员</p>
+                </div>
+                `;
+                        appendNode($('#operat'), str);
+                    } else {
+                        $('#delDepart').css("display", "none");
+                    };
+                } else {
+                    tId = mId;
+                    $('#addLog').css("display", "none");
+                    $(document)[0].title = "移除成员";
+                    addUserList(tId);
+                    if (k === 0) {
+                        var str = `
+                <div id="memberMask">
+                    <img src="images/no.png" alt="" />
+                    <p>部门无成员</p>
+                </div>
+                `;
+                        appendNode($('#operat'), str);
+                    } else {
+                        $('#delDepart').css("display", "none");
+                    };
+                }
+                /*------------------------------------------分组 login--------------------------------------------------*/
+                var memberSum = $('#memberSum'),
+                    obj = {},
+                    memberArr = [],
+                    k = 0;
+
+                function addUserList(id) {
+                    setAjaxNA("/dept/listUserByDepartment?id=" + id, function (data) {
+                        var userArr = data.data,
+                            userLen = userArr.length,
+                            i = 0,
+                            count = 0;
+                        for (i; i < userLen; i++) {
+                            k++;
+                            var user = userArr[i],
+                                tmp = parseFloat(user.temperature),
+                                lng = user.userLongitude,
+                                lat = user.userLatitude,
+                                str = `
+                    <label class="weui-cell weui-cell_active weui-check__label" for="` + user.userId + `">
+                            <div class="weui-cell__hd">
+                                <input type="checkbox" class="weui-check" name="checkboxUser" id="` + user.userId + `"/>
+                                <i class="weui-icon-checked"></i>
+                            </div>
+                            <div class="weui-cell__bd">
+                                <div class="avatar_hd">`;
+                            var nT = new Date().getTime(),
+                                gT = new Date(user.gmtCreate).getTime(),
+                                dT = nT - gT,
+                                difference = 7200000;
+                            if (dT > difference) {
+                                str += `<img class="imgCfg" src="images/memberN.png" alt="">`;
+                            } else {
+                                str += `<img class="imgCfg" src="images/member.png" alt="">`;
+                            }
+
+                            str += `
+                                </div>
+                                <div class="avatar_bd">
+                                    <span style="margin-top: 2px;">` + user.name + `</span>
+                                    <p style="font-size: 12px; color: #929292;">` + user.tel + `</p>
+                                </div>
+                            </div>
+                            <div class="weui-cell__ft" style="width: 18%;">  
+                        `;
+                            if (tmp === null || tmp === undefined) {
+                                tmp = 0;
+                            }
+                            if (tmp >= 37.3) {
+                                str += `
+                            <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                            `;
+                            }
+
+                            if (dT > difference) {
+                                str += `
+                            <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                        `;
+                            }
+
+                            var mLng = parseFloat(user.railLongitude),
+                                mLat = parseFloat(user.railLatitude);
+                            var point = new BMap.Point(lng, lat),
+                                mPoint = new BMap.Point(mLng, mLat);
+                            var circle = new BMap.Circle(mPoint, user.radius, {
+                                fillColor: "blue",
+                                strokeWeight: 1,
+                                fillOpacity: 0.3,
+                                strokeOpacity: 0.3
+                            });
+                            var whtinScope = true;
+                            if (BMapLib.GeoUtils.isPointInCircle(point, circle)) {
+                                //console.log("该point在circle内");
+                            } else {
+                                whtinScope = false;
+                            }
+                            if (whtinScope === false) {
+                                str += `
+                            <img src="images/mapError.png" alt="" class="ftIcon"/>
+                            `;
+                            }
+                            str += `
+                            </div>
+                        </label>    
+                        `;
+                            memberSum = $('#memberSum');
+                            appendNode(memberSum, str);
+                        }
+                    }, function () {
+                        window.location.href = "./html/home/empty_page.html";
+                    });
+                }
+
+                function addUserList_msg(id, subId) {
+                    setAjaxNA("/dept/listUserByDepartment?id=" + id, function (data) {
+                        var userArr = data.data,
+                            userLen = userArr.length,
+                            i = 0,
+                            j = 0,
+                            count = 0,
+                            numArr = [],
+                            a1;
+                        for (i; i < userLen; i++) {
+                            numArr.push(parseInt(userArr[i].userId));
+                        }
+                        setAjaxNA("/dept/listUserByDepartment?id=" + subId, function (data) {
+                            var arr = data.data,
+                                len = arr.length,
+                                numArr_2 = [],
+                                n = 0;
+                            for (n; n < len; n++) {
+                                numArr_2.push(parseInt(arr[n].userId));
+                            }
+                            a1 = add_msg(numArr, numArr_2);
+                        }, function (XMLHttpRequest) {
+                            alert(XMLHttpRequest.status);
+                            window.location.href = "empty_page.html";
+                        });
+                        for (j; j < userLen; j++) {
+                            k++;
+                            var user = userArr[j];
+                            if (a1.indexOf(parseInt(user.userId)) !== -1) {
+                                var tmp = parseFloat(user.temperature),
+                                    lng = user.userLongitude,
+                                    lat = user.userLatitude,
+                                    str = `
+                        <label class="weui-cell weui-cell_active weui-check__label" for="` + user.userId + `">
+                                <div class="weui-cell__hd">
+                                    <input type="checkbox" class="weui-check" name="checkboxUser" id="` + user.userId + `"/>
+                                    <i class="weui-icon-checked"></i>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <div class="avatar_hd">`;
+                                var nT = new Date().getTime(),
+                                    gT = new Date(user.gmtCreate).getTime(),
+                                    dT = nT - gT,
+                                    difference = 7200000;
+                                if (dT > difference) {
+                                    str += `<img class="imgCfg" src="images/memberN.png" alt="">`;
+                                } else {
+                                    str += `<img class="imgCfg" src="images/member.png" alt="">`;
+                                }
+
+                                str += `
+                                </div>
+                                    <div class="avatar_bd">
+                                        <span style="margin-top: 2px;">` + user.name + `</span>
+                                        <p style="font-size: 12px; color: #929292;">` + user.tel + `</p>
+                                    </div>
+                                </div>
+                                <div class="weui-cell__ft" style="width: 18%;">  
+                            `;
+                                if (tmp === null || tmp === undefined) {
+                                    tmp = 0;
+                                }
+                                if (tmp >= 37.3) {
+                                    str += `
+                                <img src="images/tmpError.png" alt="" class="ftIcon"/>
+                                `;
+                                }
+
+                                if (dT > difference) {
+                                    str += `
+                                <img src="images/deviceError.png" alt="" class="ftIcon"/>
+                            `;
+                                }
+
+                                var mLng = parseFloat(user.railLongitude),
+                                    mLat = parseFloat(user.railLatitude);
+                                var point = new BMap.Point(lng, lat),
+                                    mPoint = new BMap.Point(mLng, mLat);
+                                var circle = new BMap.Circle(mPoint, user.radius, {
+                                    fillColor: "blue",
+                                    strokeWeight: 1,
+                                    fillOpacity: 0.3,
+                                    strokeOpacity: 0.3
+                                });
+                                var whtinScope = true;
+                                if (BMapLib.GeoUtils.isPointInCircle(point, circle)) {
+                                    //console.log("该point在circle内");
+                                } else {
+                                    whtinScope = false;
+                                }
+                                if (whtinScope === false) {
+                                    str += `
+                                <img src="images/mapError.png" alt="" class="ftIcon"/>
+                                `;
+                                }
+                                str += `
+                                </div>
+                            </label>    
+                            `;
+                                memberSum = $('#memberSum');
+                                appendNode(memberSum, str);
+                            }
+                        }
+                    }, function () {
+                        window.location.href = "./html/home/empty_page.html";
+                    });
+                }
+                /*------------------------------------------分组 end----------------------------------------------------*/
+
+                /*------------------------------------------allSelect login----------------------------------------------------*/
+                //#selectAll
+                var $selectAll = $('#selectAll'),
+                    $ele = $('[name=checkboxUser]');
+                checkAll($selectAll, $ele);
+
+                /*------------------------------------------allSelect end----------------------------------------------------*/
+
+                /*------------------------------------------addLog login----------------------------------------------------*/
+                //addLog 修改 memberLog
+                $('#addLog').on('click', function () {
+                    var len = $('[name=checkboxUser]:checked').length;
+                    if (len === 0) {
+                        toastMsg('请先选择成员');
+                    } else {
+                        $('#memberLog').css("display", "block");
+                    }
+                });
+                $('#memberLog .weui-dialog__btn_default').on('click', function () {
+                    $('#memberLog').css("display", "none");
+                });
+                $('#memberLog .weui-dialog__btn_primary').on('click', function () {
+                    var obj = {},
+                        arr = [];
+                    $('[name=checkboxUser]:checked').each(function () {
+                        arr.push(parseInt($(this).attr("id")));
+                    });
+                    obj = {
+                        "depId": mId,
+                        "userId": arr
+                    }
+                    setAjaxArr("/dept/addMember", obj, function (data) {
+                        toastMsg('添加成功')
+                        if (data.code === 0) {
+                            var i = 0,
+                                len = arr.length;
+                            $('[name=checkboxUser]:checked').parent().parent('label').remove();
+                            $('#memberLog').css("display", "none");
+                        }
+                    }, function (XMLHttpRequest) {
+                        alert(XMLHttpRequest.status);
+                        window.location.href = "empty_page.html";
+                    });
+                });
+                $('#memberLog .weui-mask').on('click', function () {
+                    $('#memberLog').css("display", "none");
+                });
+                /*------------------------------------------addLog end----------------------------------------------------*/
+
+                /*------------------------------------------delLog login----------------------------------------------------*/
+                //delLog 修改 delMemberLog
+                $('#delLog').on('click', function () {
+                    var len = $('[name=checkboxUser]:checked').length;
+                    if (len === 0) {
+                        toastMsg('请先选择成员');
+                    } else {
+                        $('#delMemberLog').css("display", "block");
+                    }
+                });
+                $('#delMemberLog .weui-dialog__btn_default').on('click', function () {
+                    $('#delMemberLog').css("display", "none");
+                });
+                $('#delMemberLog .weui-dialog__btn_primary').on('click', function () {
+                    var obj = {},
+                        arr = [];
+                    $('[name=checkboxUser]:checked').each(function () {
+                        arr.push(parseInt($(this).attr("id")));
+                    });
+                    obj = {
+                        "depId": mId,
+                        "userIds": arr
+                    }
+                    setAjaxArr("/dept/removeMember", obj, function (data) {
+                        toastMsg('移除成功');
+                        if (data.code === 0) {
+                            $('#delMemberLog').css("display", "none");
+                            $('[name=checkboxUser]:checked').parent().parent('label').remove();
+                        }
+                    }, function (XMLHttpRequest) {
+                        alert(XMLHttpRequest.status);
+                        window.location.href = "empty_page.html";
+                    });
+                });
+                $('#delMemberLog .weui-mask').on('click', function () {
+                    $('#delMemberLog').css("display", "none");
+                });
+                /*------------------------------------------delLog end----------------------------------------------------*/
+            });
+    </script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        #loading,
+        #operat_load {
+            height: 100%;
+            width: 100%;
+            background-color: #fff;
+            z-index: 3;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .weui-cells_checkbox .weui-check:checked+.weui-icon-checked:before {
+            color: #5090f1;
+        }
+
+        /*-------------------------weui 带跳转 login-------------------------*/
+        .weui-cell_access .weui-cell__ft:after {
+            content: "";
+            border-style: none;
+            right: -10px;
+        }
+
+        .weui-cell_access .weui-cell__ft {
+            padding-right: 0;
+        }
+
+        .weui-cells {
+            font-size: 14px;
+        }
+
+        .imgCfg {
+            width: 25px;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+
+        .weui-cells__title {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            color: #838584;
+            font-size: 12px;
+            background-color: #f2f3f5;
+        }
+
+        #memberLog .weui-dialog__bd,
+        #delMemberLog .weui-dialog__bd {
+            padding-bottom: 0;
+        }
+
+        #memberLog .weui-dialog__title,
+        #delMemberLog .weui-dialog__title {
+            font-size: 16px;
+            font-weight: 400;
+            color: #000;
+        }
+
+        #memberLog .weui-dialog__hd,
+        #delMemberLog .weui-dialog__hd {
+            font-size: 17px;
+        }
+
+        #memberLog .weui-dialog__ft a,
+        #delMemberLog .weui-dialog__ft a {
+            color: #1e62b3;
+        }
+
+        #memberSum {
+            margin: 0;
+        }
+
+        #memberSum:before {
+            border: 0;
+        }
+
+        #memberSum .weui-cell {
+            padding: 5px 15px;
+        }
+
+        /*-------------------------weui 带跳转 end-------------------------*/
+
+        #memberMask {
+            width: 100%;
+            color: #9da2a5;
+        }
+
+        #memberMask img {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        #memberMask p {
+            text-align: center;
+            color: #9da2a6;
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            font-size: 14px;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        #tabbar_my a {
+            height: 40px;
+            margin: 0 auto;
+            display: inline-block;
+            padding: 0;
+            color: #5090f1;
+        }
+
+        #tabbar_my a p {
+            font-size: 14px;
+            transform: translateY(35%);
+        }
+
+        .weui-cells.weui-cells_checkbox {
+            margin-top: 0;
+        }
+
+        .weui-cells:before {
+            border: 0;
+        }
+
+        .my-toast {
+            height: 26px;
+            min-height: 0;
+            border-radius: 5px;
+            bottom: 57px;
+            position: fixed;
+            z-index: 5000;
+            left: 50%;
+            margin-left: -3.8em;
+            background: rgba(17, 17, 17, 0.7);
+            text-align: center;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 14px;
+            padding: 0 27px;
+            transform: translateX(-10%);
+        }
+
+        .ftIcon {
+            width: 25%;
+            vertical-align: middle;
+            max-width: 22px;
+        }
+
+        /*----------------------avatar login------------------------*/
+        .avatar_hd,
+        .avatar_bd {
+            float: left;
+        }
+
+        .avatar_hd {
+            height: 100%;
+            margin-right: 12px;
+            margin-top: 6px;
+        }
+
+        /*----------------------avatar login------------------------*/
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>地图</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+
+                <div class="page__hd" style="background-color: #fff; padding: 0;">
+
+                </div>
+                <div class="page__bd" style="width: 100%; height: 94%;">
+                    <img src="../../images/empty.png" alt=""
+                        style="width: 150px; position: absolute; top: 35%; left: 50%; transform: translateY(-50%) translateX(-50%);">
+                    <p
+                        style="text-align: center; position: absolute; top: 45%; left: 50%; transform: translateX(-50%); color: #aaaaaa;">
+                        网络连接失败</p>
+                    <a href="./map.html" class="weui-btn weui-btn_warn reload">重新加载<i class="weui-loading"></i></a>
+                </div>
+
+                <div class="weui-tabbar" id="tabbar_my">
+                    <a href="javascript:" id="index" class="weui-tabbar__item">
+                        <img src="../../images/home.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">首页</p>
+                    </a>
+                    <a href="javascript:" id="map" class="weui-tabbar__item weui-bar__item_on">
+                        <img src="../../images/map_on.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">地图</p>
+                    </a>
+                    <a href="javascript:" id="setting" class="weui-tabbar__item">
+                        <img src="../../images/setting.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">设置</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    /*百度地图API功能*/
+    $(function(){
+        
+});
+
+    $(function(){
+        //获取corpId
+        var corpId = getCookie();
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "../map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-tab__panel {
+            padding: 0;
+        }
+
+        .reload {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 35%;
+            height: 26px;
+            line-height: 26px;
+            font-size: 14px;
+        }
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

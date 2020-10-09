@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>围栏管理</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script type="text/javascript" src="js/TextIconOverlay.js"></script>
+    <script type="text/javascript" src="js/MarkerClusterer.js"></script>
+    <script type="text/javascript" src="../../js/store.min.js"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <div id="loading">
+        <div class="weui-loadmore">
+            <i class="weui-loading"></i>
+            <span class="weui-loadmore__tips">正在加载</span>
+        </div>
+    </div>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab" style="height: 100%; background-color: #f8f8f8;">
+                <div style="height: 85%; background-color: #f8f8f8;">
+                    <!--修改围栏-->
+                    <div id="mapChangeContainer">
+                        <div id="changeMap" style="height: 100%; width: 100%;"></div>
+                        <div class="weui-cells weui-cells_form"
+                            style="margin-top: 0; max-height: 100px; padding: 0 15px; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <div class="weui-cell weui-cell_active" style="padding-left: 0;">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">围栏名称:</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="changeName" name="changeName" />
+                                </div>
+                                <div class="weui-cell__ft" id="changeRail">
+                                    <i class="weui-icon-warn"></i>
+                                </div>
+                            </div>
+                            <div class="weui-cell weui-cell_active" style="padding-left: 0;">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">半径:</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" id="changeRaduis" name="changeRaduis" type="number"
+                                        placeholder="100" />
+                                </div>
+                                <span>m</span>
+                                <div class="weui-cell__ft" id="captChange">
+
+                                    <i class="weui-icon-warn"></i>
+                                </div>
+                            </div>
+                            <!--Map know-->
+                            <div class="js_dialog" id="changeKnow" style="display: none;">
+                                <div class="weui-mask"></div>
+                                <div class="weui-dialog">
+                                    <div class="weui-dialog__bd"></div>
+                                    <div class="weui-dialog__ft">
+                                        <a href="javascript:" class="weui-dialog__btn weui-dialog__btn_primary">知道了</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Map know-->
+                        </div>
+                        <div id="operChange" style="background-color: #fff; height: 300px; padding: 0 15px;">
+                            <a href="javascript:;" class="weui-btn weui-btn_mini weui-btn_primary btnC"
+                                id="changeOk">修改</a>
+                            <a href="javascript:history.back();"
+                                class="weui-btn weui-btn_mini weui-btn_primary btnC_back" id="changeBack">返回</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    /*rail*/
+    $(function(){
+        captLogin();
+        var railObj = JSON.parse(decodeURI(store.get("railObj")));
+/*-------------------------修改围栏 login--------------------------------------*/ 
+        $('#changeRaduis').on('input', function(){
+            if($(this).val().length>6) {
+                $(this).val($(this).val().slice(0, 6));
+            }
+        });
+    	//change BTN
+		var thisRail = railObj,
+        changeNumber = thisRail.id,
+		changeLng = parseFloat(thisRail.longitude),
+		changeLat = parseFloat(thisRail.latitude),
+		changeR = thisRail.radius,
+		changeN = thisRail.railName,
+        railAddr_change = thisRail.railAddr;
+        //#changeName #changeRaduis
+        $('#changeName').val(changeN);	
+        $('#changeRaduis').val(changeR);	
+        var map = new BMap.Map("changeMap");
+        var point = new BMap.Point(changeLng, changeLat);
+        map.centerAndZoom(point, 20);
+        map.addControl(new BMap.NavigationControl({
+            offset: new BMap.Size(10, 200)
+        }));    // 按钮平移缩放控件
+        map.addControl(new BMap.ScaleControl({
+            anchor: BMAP_ANCHOR_BOTTOM_LEFT,
+            offset: new BMap.Size(10, 10)
+        }));    // 一个比例尺控件
+        showOverlay(changeLng, changeLat);
+        //单击获取点击的经纬度
+        map.addEventListener("click",function(e){
+        $('#changeName').blur();
+        $('#changeRaduis').blur();
+        changeLat = e.point.lat;
+        changeLng = e.point.lng;
+        showOverlay(changeLng, changeLat);
+        });
+        map.addEventListener("dragstart", function(){
+            $('#changeName').blur();
+            $('#changeRaduis').blur();
+        });
+        function showOverlay(x, y) {
+            var point = new BMap.Point(x, y);
+            var geoc = new BMap.Geocoder();
+            geoc.getLocation(point, function(rs){
+                var addComp = rs.addressComponents;
+                //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                railAddr_change = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+                var markerTxt = addComp.district + addComp.street + addComp.streetNumber;
+                var radius = $('#changeRaduis').val() || 100;
+                var marker = new BMap.Marker(point);
+                var circle = new BMap.Circle(point, radius, {strokeColor:"blue", strokeWeight: 1, strokeOpacity: 0.01, fillColor: '#53aeff', fillOpacity: 0.4});
+                map.clearOverlays();
+                map.addOverlay(marker);
+                var label = new BMap.Label(markerTxt,{offset:new BMap.Size(20,-10)});
+                marker.setLabel(label);
+                map.addOverlay(circle);
+            });
+        }
+                
+        //#changeOk 
+        $('#changeRaduis').on('input', function(){
+            changeR = $('#changeRaduis').val();
+        });
+        $('#changeName').on('blur', function(){
+            changeN = $('#changeName').val();
+            setAjaxNA("/rail/queryRailByName?railName="+changeN,function(data){
+                if(data.code===0) {
+                    $('#changeRail').removeClass('weui-cell_warn');
+                }else {
+                    //msg #changeKnow .weui-dialog__bd  //btn #changeKnow a 
+                    //#changeRail .weui-cell_warn
+                    $('#changeRail').addClass('weui-cell_warn');
+                    $('#changeKnow .weui-dialog__bd').text(data.msg);
+                    $('#changeKnow').css("display", "block");
+                }
+            }, function(){
+                window.location.href = "./empty_page.html";
+            });
+        });
+        $('#changeKnow a').on('click', function(){ //改变名称提示
+            $('#changeKnow').css("display", "none");
+        });
+        $('#changeOk').on('click', function() { //change BTN
+            $('#changeName').blur();
+            $('#changeRaduis').blur();
+            if($('.weui-cell_warn').length===0) {
+                var changeObj = {
+                    "latitude": changeLat,
+                    "longitude": changeLng,
+                    "radius": changeR,
+                    "railName": changeN,
+                    "id": changeNumber,
+                    "railAddr": railAddr_change
+                }
+            setAjax("/rail/updateRail", changeObj, function(data){
+                showOverlay(changeObj.longitude, changeObj.latitude);
+                $('#changeKnow .weui-dialog__bd').text(data.msg);
+                $('#changeKnow').css("display", "block");
+            }, function() {
+                window.location.href = "./empty_page.html";
+            });
+            }else {
+                $('#changeKnow .weui-dialog__bd').text('请填写正确的相关信息');
+                $('#changeKnow').css("display", "block");
+            }
+        });
+/*-------------------------修改围栏 end--------------------------------------*/ 
+
+/*-------------------------展示用户 login--------------------------------------*/
+        var railId = railObj.id,
+            pointArray = [],
+            userIdArr = [],
+            markers = [];
+        setAjaxN("/rail/listUserInfoByRail?railId=" + railId, function(data){
+            var newsArr = data.data,
+                newsLen = newsArr.length,
+                i = 0,
+                k = 0;
+            for(i; i<newsLen; i++) {
+                var news = newsArr[i];
+                lng = news.longitude;
+                lat = news.latitude;
+                if(lng===undefined || lng===null || lat===undefined || lat===null) {
+                    k++;
+                    continue;
+                }
+                var point = new BMap.Point(lng, lat);
+                var status = news.online || false; //在线状态
+                var abnormal = news.temperature || 37.1; //异常体温
+                var icon;
+                var label_color;
+                if(status) {
+                    icon = "../../images/marker_online.png"; //在线状态icon
+                    label_color = "#287de1";
+                    marker_bgc = "#287de1";
+                    $('#popInfo').css("background-color", marker_bgc);
+                }else {
+                    icon = "../../images/marker_no.png"; //不在线状态icon
+                    label_color = "#bfbfbf";
+                    marker_bgc = "#bfbfbf";
+                    $('#popInfo').css("background-color", marker_bgc);
+                }
+                if(parseFloat(abnormal)>=37.3) {
+                    icon = "../../images/marker_danger.png"; //体温异常状态icon
+                    label_color = "#c7000a";
+                    marker_bgc = "#c7000a";
+                    $('#popInfo').css("background-color", marker_bgc);
+                }
+                pointArray[i] = point;
+                myIcon = new BMap.Icon(icon, new BMap.Size(28,38)); //创键图标
+                //marker = new BMap.Marker(point);  // 创建标注  
+                marker = new BMap.Marker(point,{icon:myIcon});
+                marker.disableMassClear();
+                //marker.setAnimation(BMAP_ANIMATION_BOUNCE);       动画    
+                marker.disableDragging();  // 不可拖拽
+                markers.push(marker);
+                //为地图标注 注册事件
+                marker.addEventListener("click", function(){
+                    
+                });
+                //map.addOverlay(marker);    //增加点
+                label = new BMap.Label(news.userName, {offset:new BMap.Size(10, -15)}); //文字标注
+                label.setStyle({
+                    border: '1px solid '+label_color,
+                    color: label_color
+                });//文字标注样式
+                marker.setLabel(label);
+            }
+            //map.setViewport(pointArray);
+            var markerClusterer = new BMapLib.MarkerClusterer(map, {markers:markers});
+            if(k !== 0) {
+                $('#changeKnow .weui-dialog__bd').text("当前共有" + k + "人没有位置信息");
+                $('#changeKnow').css("display", "block");
+            }
+        }, function(){
+            window.location.href = "./empty_page.html";
+        });
+/*-------------------------展示用户 end--------------------------------------*/
+});
+
+    $(function(){
+        //获取corpId
+        var corpId = getCookie();
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "../map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+
+        setTimeout(function(){
+            $('#loading').css("display", "none");
+        }, 500);
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .weui-tab__panel {
+            padding: 0;
+        }
+
+        #r-result {
+            width: 100%;
+        }
+
+        .weui-dialog {
+            max-width: 768px;
+            max-height: 511px;
+        }
+
+        #addMap {
+            padding: 0;
+        }
+
+        #mapContainer {
+            height: 75%;
+            width: 100%;
+            position: absolute;
+            display: none;
+            z-index: 10000;
+        }
+
+        #mapChangeContainer {
+            height: 72%;
+            width: 100%;
+            position: absolute;
+            z-index: 1;
+        }
+
+        #addMap .anchorBL,
+        #mapChangeContainer .anchorBL {
+            display: none;
+        }
+
+        #mapChangeContainer .BMap_scaleCtrl,
+        #addMap .BMap_scaleCtrl {
+            display: block;
+        }
+
+        #promptKnow {
+            z-index: 10002;
+        }
+
+        .tangram-suggestion-main .tangram-suggestion {
+            z-index: 10000;
+        }
+
+        .weui-cell_access .weui-cell__ft:after {
+            content: "";
+            border-style: none;
+            right: -10px;
+        }
+
+        .weui-cell_access .weui-cell__ft {
+            padding-right: 0;
+        }
+
+        .link_desc {
+            font-size: 12px;
+            color: gray;
+            padding-left: 13px;
+        }
+
+        #linkList .weui-cells {
+            margin: 0;
+        }
+
+        /*------------------iosActionsheet login-------------------------*/
+        #iosActionsheet {
+            color: #3b3b3b;
+        }
+
+        #iosActionsheet,
+        #iosActionsheet .weui-actionsheet__title {
+            border-radius: 10px 10px 0 0;
+        }
+
+        #iosActionsheet .weui-actionsheet__title {
+            color: #929292;
+            font-size: 18px;
+        }
+
+        #iosActionsheet .weui-actionsheet__cell {
+            padding: 18px;
+        }
+
+        #iosActionsheet .weui-actionsheet__action {
+            margin-top: 0;
+        }
+
+        #iosActionsheetCancel.weui-actionsheet__cell {
+            background-color: #fafafa;
+            border-radius: 125px;
+            width: 80%;
+            padding: 10px;
+            margin: 0 auto;
+        }
+
+        #iosActionsheet .line {
+            background-color: #c9c9c9;
+            position: absolute;
+            top: 12px;
+            height: 5px;
+            width: 36px;
+            border-radius: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .weui-actionsheet__title .weui-actionsheet__title-text {
+            margin-top: 16px;
+        }
+
+        /*------------------iosActionsheet end-------------------------*/
+
+        /*------------------btn_bound login-------------------------*/
+        .btn_bound,
+        .btn_back {
+            width: 70%;
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+            transform: translateX(-50%);
+        }
+
+        .btn_back {
+            margin: 0 50% !important;
+            background-color: #cecece;
+        }
+
+        .btn_bound {
+            margin-left: 50%;
+        }
+
+        .btnC {
+            display: block;
+        }
+
+        .btnC_back {
+            display: block;
+        }
+
+        .weui-btn+.weui-btn {
+            margin-top: 7px;
+        }
+
+        /*------------------btn_bound end-------------------------*/
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>

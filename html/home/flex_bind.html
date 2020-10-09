@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+    <title>绑定用户</title>
+    <link rel="stylesheet" href="../../css/weui.css"/>
+    <link rel="stylesheet" href="../../example.css" />
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=EG4ercSC4ZmBIhIcBvyoj65q12m2fy00"></script>
+    <script src="../../echarts.min3.js"></script>
+    <script src="../../ajaxMy.js"></script>
+</head>
+
+<body ontouchstart>
+    <!--<div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>-->
+
+    <div class="container" id="container">
+        <div class="page__bd" style="height: 100%;">
+            <div class="weui-tab">
+                <div class="weui-tab__panel" style="text-align: center;">
+                    <div style="position: absolute; top: 35%; left: 50%; transform: translateY(-50%) translateX(-50%);width: 77%;
+                    height: 43%;">
+                        <img style="width: 100%;" alt="二维码" name="二维码" id="scanCode">
+                    </div>
+                    <h3
+                        style="position: absolute; top: 70%; left: 50%; transform: translateY(-50%) translateX(-50%); color: #287DE1;width: 80%;">
+                        请使用微信扫描二维码绑定用户</h3>
+                    <!--手动绑定-->
+                    <a href="javascript:" id="manBind" class="weui-btn weui-btn_mini weui-btn_warn"
+                        style="bottom: 53px; position: absolute; width: 95%; height: 60px; line-height: 60px; padding: 0; font-size: 20px; letter-spacing: 2px; transform: translateX(-50%);">手动绑定用户</a>
+                </div>
+                <div class="weui-tabbar" id="tabbar_my">
+                    <a href="javascript:" id="index" class="weui-tabbar__item weui-bar__item_on">
+                        <img src="../../images/home.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">首页</p>
+                    </a>
+                    <a href="javascript:" id="map" class="weui-tabbar__item">
+                        <img src="../../images/map.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">地图</p>
+                    </a>
+                    <a href="javascript:" id="setting" class="weui-tabbar__item">
+                        <img src="../../images/setting.png" alt="" class="weui-tabbar__icon">
+                        <p class="weui-tabbar__label">设置</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="tpl_home">
+
+
+<script type="text/javascript">
+    /*灵活绑定用户*/
+    var patams = getPatams();
+    var number = patams.number; // 获取序列号 number
+    $(function() {
+        captLogin();
+        //扫码绑定
+        setAjaxN("/qywx/generateQRCode?serial="+number, function(data){
+            //console.log(data);
+            var code = data.data.code;
+            var imei = data.data.imei;
+            var corpId = data.data.corpId;
+            $('#scanCode').attr('src', code);
+            //手动绑定
+            $('#manBind').on('click', function() {
+                //window.location.href = "./location.html?adminUser=1&imei="+imei;
+                window.location.href = "./bind_admin.html?imei="+imei+"&corpId="+corpId;
+            });
+        }, function(textStatus,XMLHttpRequest){
+            window.location.href = "./empty_page.html";
+            //alert(XMLHttpRequest.status);
+            //alert(XMLHttpRequest.readyState);
+            //alert(textStatus);
+        });
+    });
+    /**/
+    $(function(){
+        //首页
+        $('#index').on('click', function(){
+            window.location.href = "../../index.html";
+        });
+        //地图
+        $('#map').on('click', function(){
+            window.location.href = "../map/map.html";
+        });
+        //设置
+        $('#setting').on('click', function(){
+            window.location.href = "../setting/setting.html";
+        });
+
+        var winH = $(window).height();
+        var categorySpace = 10;
+
+        $('.js_item').on('click', function(){
+            var id = $(this).data('id');
+            window.pageManager.go(id);
+        });
+        $('.js_category').on('click', function(){
+            var $this = $(this),
+                $inner = $this.next('.js_categoryInner'),
+                $page = $this.parents('.page'),
+                $parent = $(this).parent('li');
+            var innerH = $inner.data('height');
+
+            if(!innerH){
+                $inner.css('height', 'auto');
+                innerH = $inner.height();
+                $inner.removeAttr('style');
+                $inner.data('height', innerH);
+            }
+
+            if($parent.hasClass('js_show')){
+                $parent.removeClass('js_show');
+            }else{
+                $parent.siblings().removeClass('js_show');
+
+                $parent.addClass('js_show');
+                if(this.offsetTop + this.offsetHeight + innerH > $page.scrollTop() + winH){
+                    var scrollTop = this.offsetTop + this.offsetHeight + innerH - winH + categorySpace;
+
+                    if(scrollTop > this.offsetTop){
+                        scrollTop = this.offsetTop - categorySpace;
+                    }
+
+                    $page.scrollTop(scrollTop);
+                }
+            }
+
+            var winH = $(window).height();
+            var $foot = $('body').find('.page__ft');
+            if($foot.length < 1) return;
+
+            if($foot.position().top + $foot.height() < winH){
+                $foot.addClass('j_bottom');
+            }else{
+                $foot.removeClass('j_bottom');
+            }
+        });
+    });
+</script>
+    <style scoped>
+        .weui-tabbar__item .weui-tabbar__label {
+            color: #929292;
+        }
+
+        .weui-bar__item_on {
+            color: #4377ff;
+        }
+
+        .page {}
+
+        /*---------------------tabbar------------------------*/
+        .weui-tabbar {
+            background-color: #fff;
+        }
+
+        /*---------------------grid------------------------*/
+        .weui-grids .weui-grid {
+            background-color: #fff;
+        }
+
+        .BMap_scaleCtrl {}
+
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        /*------地图标注 显示隐藏--------*/
+        .userInfo_hide {
+            display: none;
+        }
+
+        .userInfo_show {
+            display: block;
+        }
+
+        #vx_container .anchorBL {
+            /*display: none;*/
+        }
+    </style>
+    </script>
+    <script src="../../zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+    <script src="../../example.js"></script>
+</body>
+
+</html>
